@@ -1,42 +1,219 @@
-<!DOCTYPE html>
-<html lang="en" ng-app="myApp" ng-strict-di>
+<!doctype html>
+<html lang="en">
+<!-- html lang="en" ng-app="myApp" ng-strict-di -->
   <head>
     <title>Neural Net Builder</title>
     <script crossorigin="anonymous" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="css/nnbuilder.css">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <script>
+    $( function() {
+      var $componentPanel = $("#componentpanel");
+      var $mainPanel = $("#mainpanel");
+
+      $(".chosenComponents").sortable();
+
+      $("li", $componentPanel).draggable({
+        cancel: "a.ui-icon",
+        revert: "invalid",
+        containment: "document",
+        helper: "clone",
+        cursor: "move",
+        appendTo: "body"
+      });
+
+      $mainPanel.droppable({
+        accept: "#componentpanel > li",
+        classes: {
+            "ui-droppable-active": "ui-state-highlight"
+        },
+        drop: function(event, ui) {
+          //addComponent(ui.draggable)
+          addComponent(ui);
+        }
+      });
+
+      $componentPanel.droppable({
+        accept: "#mainpanel li",
+        classes: {
+          "ui-droppable-active": "custom-state-active"
+        },
+        drop: function(event, ui) {
+          removeComponent(ui.draggable);//take the image out of the mainPanel
+        }
+      });
+
+      // Image deletion function
+      var recycle_icon = "<a href='link/to/recycle/script/when/we/have/js/off' title='Recycle this image' class='ui-icon ui-icon-refresh'>Recycle image</a>";
+      function addComponent( $item ) {
+        var $list = $( "ul", $mainPanel );
+
+        var $newItem = $item.helper.clone();
+        $newItem.addClass("list-group-item");
+        $newItem.removeAttr("style");
+        $newItem
+          .find("span.glyphicon-question-sign").remove().end();
+        var $newSpan =
+        "<span class='glyphicon glyphicon-wrench'></span>&nbsp;<span class='glyphicon glyphicon-remove-sign'></span>";
+        $newItem.append($newSpan);
+
+        $newItem.appendTo( $list );
+
+      }
+
+      // Image recycle function
+      var trash_icon = "<a href='link/to/trash/script/when/we/have/js/off' title='Delete this image' class='ui-icon ui-icon-trash'>Delete image</a>";
+      function removeComponent( $item ) {
+        $item.fadeOut(function() {
+          $item
+            .find( "a.ui-icon-refresh" )
+              .remove()
+            .end();
+        });
+      }
+
+      // Image preview function, demonstrating the ui.dialog used as a modal window
+      function describeComponent( $link ) {
+        var src = $link.attr( "href" ),
+          title = $link.siblings( "img" ).attr( "alt" ),
+          $modal = $( "img[src$='" + src + "']" );
+
+        if ( $modal.length ) {
+          $modal.dialog( "open" );
+        } else {
+          var img = $( "<img alt='" + title + "' width='384' height='288' style='display: none; padding: 8px;' />" )
+            .attr( "src", src ).appendTo( "body" );
+          setTimeout(function() {
+            img.dialog({
+              title: title,
+              width: 400,
+              modal: true
+            });
+          }, 1 );
+        }
+      }
+
+      // Resolve the icons behavior with event delegation
+      $( "ul.componentpanel > li" ).on( "click", function( event ) {
+        var $item = $( this ),
+          $target = $( event.target );
+
+        if ( $target.is( "span.glyphicon-question-sign" ) ) {
+          describeComponent( $target );
+        // } else if ( $target.is( "a.ui-icon-refresh" ) ) {
+        //   removeComponent( $item );
+        }
+
+        return false;
+      });
+
+    });
+  </script>
   </head>
 
   <body>
     <!-- h1>Welcome to neural net builder</h1 -->
-    <div style="position:absolute; top:0%; left:0%; width:100%; height:100%;">
+    <div class="container" style="position:absolute; top:5%; left:5%; width:90%; height:90%;">
 
       <!-- components on the left -->
-      <div class="componentPanel" style="position:absolute; top:0%; left:0%; width:20%; height:60%;">
-        <div class="nnlayer" style="width:60%; height:20%;">
-          <img src="imgs/conv_layer.png" style="height:90%; width:40%">&nbsp;Convolution
-        </div>
-        <div class="nnlayer" style="top:20%;width:60%; height:20%;">
-          <img src="imgs/conv_layer.png" style="height:90%; width:40%">&nbsp;ReLU
-        </div>
-        <div class="nnlayer" style="top:20%;width:60%; height:20%;">
-          <img src="imgs/conv_layer.png" style="height:90%; width:40%">&nbsp;FC
-        </div>
+      <div class="ui-widget ui-helper-clearfix toolspanel" style="position:absolute; top:0%; left:0%; width:20%; height:100%;">
+        <ul id="componentpanel" class="componentpanel ui-helper-reset ui-helper-clearfix">
+          <li>
+            <button class="btn btn-warning btn-large">
+              <span class="glyphicon glyphicon-question-sign"></span>
+              ConvNet2D
+            </button>
+            <!-- a href="imgs/conv_layer.png" title="View larger" class="ui-icon ui-icon-zoomin">View larger</a -->
+            <!-- a href="link/to/trash/script/when/we/have/js/off" title="Delete this image" class="ui-icon ui-icon-trash">Delete image</a -->
+          </li>
+          <li>
+            <button class="btn btn-primary btn-large">
+              <span class="glyphicon glyphicon-question-sign"></span>
+              ReLU
+            </button>
+          </li>
+
+          <li>
+            <button class="btn btn-success btn-large">
+              <span class="glyphicon glyphicon-question-sign"></span>
+              MaxPool
+            </button>
+          </li>
+
+          <li>
+            <button class="btn btn-info btn-large">
+              <span class="glyphicon glyphicon-question-sign"></span>
+              Fully Connected
+            </button>
+          </li>
+        </ul>
+
       </div>
 
       <!-- Main -->
-      <div class="mainPanel" style="position:absolute; top:0%; left:20%; width:80%; height:60%;">
-        Main
+      <div id="mainpanel" class="ui-widget-content ui-state-default"
+      style="position:absolute; top:0%; left:20%; width:80%; height:60%; overflow:auto">
+        <h4 class="ui-widget-header"><span class="ui-icon">Scratchpad</span>Scratchpad</h4>
+        <ul class='ui-helper-reset chosenComponents list-group'/>
       </div>
 
+      <div class="codepanel jumbotron" style="position:absolute; top:60%; left:20%; width:80%; height:40%;overflow:auto">
 
-      <div class="codePanel" style="position:absolute; top:60%; left:20%; width:80%; height:40%;">
-        <div class="langPlatform" style="position:absolute; top:0%; left:0%; width:100%; height:10%;">
-          PyTorch | TensorFlow | Lua Th
+        <div class="btn-group" role="group" style="position:absolute; top:0%; left:0%; width:40%; height:5%;">
+          <button type="button" class="btn btn-default btn-xs">PyTorch</button>
+          <button type="button" class="btn btn-default btn-xs">TensorFlow</button>
+          <button type="button" class="btn btn-default btn-xs">Th-Lua</button>
         </div>
-      </div>
+
+        <div class="btn-group" role="group" style="position:absolute; top:0%; left:40%; width:60%; height:10%; z-index:100;">
+          <button type="button" class="btn btn-primary btn-lg">Generate Code</button>
+        </div>
+
+        <div class="tab-content" style="position:absolute; top:15%; left:0%; width:100%; height:95%;">
+          <div id="PyTorch" class="">
+            <pre><code>
+import torch
+import numpy as np
+def tryThis():
+  a=[]
+  return
+def tryThis():
+  a=[]
+  return
+def tryThis():
+  a=[]
+  return
+
+def tryThis():
+  a=[]
+  return
+              </code></pre>
+          </div>
+        </div>
+
+      </div><!--codePanel -->
 
     </div>
 
   </body>
+  <script>
+    (function() {
+          var pre = document.getElementsByTagName('pre'),
+              pl = pre.length;
+          for (var i = 0; i < pl; i++) {
+              pre[i].innerHTML = '<span class="line-number"></span>' + pre[i].innerHTML + '<span class="cl"></span>';
+              var num = pre[i].innerHTML.split(/\n/).length;
+              //console.log('num: ' + num);
+              //console.log('pre[i]: [' + pre[i].innerHTML + ']');
+              for (var j = 0; j < num; j++) {
+                  var line_num = pre[i].getElementsByTagName('span')[0];
+                  line_num.innerHTML += '<span>' + (j + 1) + '</span>';
+              }
+          }
+      })();
+    </script>
 </html>

@@ -1,29 +1,87 @@
-.componentPanel {
-  #background-image: url(../imgs/board-hori.png);
-  background-repeat: no-repeat;
-  background-size: 150%;
-  background-position: center;
-  background-color: lightblue;
-}
-
-.mainPanel {
-  #background-image: url(../imgs/board-hori.png);
-  background-repeat: no-repeat;
-  background-size: 150%;
-  background-position: center;
-  background-color: grey;
-}
-
 .codePanel {
-  #background-image: url(../imgs/board-hori.png);
-  background-repeat: no-repeat;
-  background-size: 150%;
-  background-position: center;
   background-color: lightgreen;
+}
+
+.toolspanel {
+  float: left;
+  background: #eee;
+}
+
+body {
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+table {
+	font-size: 1em;
+}
+
+.ui-draggable, .ui-droppable {
+	background-position: top;
 }
 
 .nnlayer {
   background-repeat: no-repeat;
   background-size: 50%;
   background-position: center;
+}
+
+#componentpanel {
+  float: left;
+  width: 65%;
+  min-height: 12em;
+}
+
+.componentpanel.custom-state-active {
+  background: #eee;
+}
+.componentpanel li { float: left; width: 96px; padding: 0.4em; margin: 0 0.4em 0.4em 0; text-align: center; }
+.componentpanel li h5 { margin: 0 0 0.4em; cursor: move; }
+.componentpanel li a { float: right; }
+.componentpanel li a.ui-icon-zoomin { float: left; }
+.componentpanel li img { width: 100%; cursor: move; }
+
+#mainpanel { float: right; width: 32%; min-height: 18em; padding: 1%; }
+#mainpanel h4 { line-height: 16px; margin: 0 0 0.4em; }
+#mainpanel h4 .ui-icon { float: left; }
+#mainpanel .componentpanel h5 { display: none; }
+
+pre {
+  background-color:#eee;
+  overflow:auto;
+  margin:0 0 1em;
+  padding:.5em 1em;
+}
+pre code,
+pre .line-number {
+  /* Ukuran line-height antara teks di dalam tag <code> dan <span class="line-number"> harus sama! */
+  font:normal normal 12px/14px "Courier New",Courier,Monospace;
+  color:black;
+  display:block;
+}
+
+pre .line-number {
+  float:left;
+  margin:0 1em 0 -1em;
+  border-right:1px solid;
+  text-align:right;
+}
+
+pre .line-number span {
+  display:block;
+  padding:0 .5em 0 1em;
+}
+
+pre .cl {
+  display:block;
+  clear:both;
+}
+
+.chosenComponents  ul.list-group:after {
+  clear: both;
+  display: block;
+  content: "";
+}
+
+.chosenComponents .list-group-item {
+    float: left;
 }
