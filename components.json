@@ -1,0 +1,21 @@
+{
+  "version": "0.1.0",
+  "name": "nnbuilder components",
+  "components": {
+    "ConvNet2D": {
+      "description": "A convolution operation applies a matrix dot product to the input matrix using a kernel matrix. \r\nThe kernel matrix is then shifted horizontal along the input matrix by stride pixels to compute the next overlapping matrix dot product",
+      "external_link": "",
+      "external_image": ""
+    },
+    "ReLU": {
+      "description": "ReLU is a rectified linear unit and it works on a real scalar by returning zero when negative, \r\n otherwise the scalar's value",
+      "external_link": "",
+      "external_image": ""
+    },
+    "MaxPool": {
+      "description": "MaxPool simply returns the maximum scalar value within typically a square area of a particular size \r\n from the input. This causes the size of the output to be scaled down by a factor. For instance, a maxpool over a \r\n size of 4x4 reduces the output by a factor of 4, with respect to the input",
+      "external_link": "",
+      "external_image": ""
+    }
+  }
+}

@@ -14,6 +14,58 @@
     $( function() {
       var $componentPanel = $("#componentpanel");
       var $mainPanel = $("#mainpanel");
+      /**
+       * Closure for component details
+       */
+      var $compDetails = (function() {
+        var items = [];
+
+        var _load = function() {
+          $.getJSON("components.json", function(data) {
+            //items = [];
+            $.each(data, function(key, value) {
+              //console.log('key:' + key);
+              if (key == "components") {
+                $.each(value, function(cn, cv) {
+                  //console.log(": " + cn + ": " + cv['description']);
+                  items.push(cn, cv['description']);
+                });
+              }
+            });
+          })
+          .done(function() {
+            //console.log("done");
+            console.log('in done, JSON data: ' + items);
+          })
+          .always(function() {
+            //console.log("always");
+          })
+          .fail(function(jqxhr, textStatus, error ) {
+            var err = textStatus + ", " + error;
+            console.log( "Request Failed: " + err );
+          });
+          console.log('in _load, JSON data length: ' + items.length);
+        } //load function
+
+        var _description = function(anItem) {
+          return items[anItem];
+        }
+
+        /**
+         * public interfaces
+         */
+        return {
+          load: _load,
+          getDescription: _description
+        };
+
+      })(); //$compDetails
+
+      $compDetails.load();
+      console.log("::" + $compDetails.getDescription('ConvNet2D'));
+      // var $details = new $compDetails();
+      // var $items = $details();
+      // console.log(":: " + $details());
 
       $(".chosenComponents").sortable();
 
@@ -47,6 +99,7 @@
         }
       });
 
+
       // Image deletion function
       var recycle_icon = "<a href='link/to/recycle/script/when/we/have/js/off' title='Recycle this image' class='ui-icon ui-icon-refresh'>Recycle image</a>";
       function addComponent( $item ) {
@@ -78,6 +131,8 @@
 
       // Image preview function, demonstrating the ui.dialog used as a modal window
       function describeComponent( $link ) {
+        console.log("" + $details);
+
         var src = $link.attr( "href" ),
           title = $link.siblings( "img" ).attr( "alt" ),
           $modal = $( "img[src$='" + src + "']" );
