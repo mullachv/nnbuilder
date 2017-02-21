@@ -3,19 +3,37 @@
   "name": "nnbuilder components",
   "components": {
     "ConvNet2D": {
-      "description": "A convolution operation applies a matrix dot product to the input matrix using a kernel matrix. \r\nThe kernel matrix is then shifted horizontal along the input matrix by stride pixels to compute the next overlapping matrix dot product",
-      "external_link": "",
-      "external_image": ""
+      "description": "A convolution operation applies a matrix dot product to the input matrix using a kernel matrix. \r\nThe kernel matrix is then shifted horizontal along the input matrix by stride pixels to compute the next overlapping matrix dot product.",
+      "external_link": "http://cs231n.github.io/convolutional-networks/#conv",
+      "external_image": "",
+      "settings": {
+        "kernel_size": "nxn",
+        "stride": "n",
+        "output_channels": "n",
+        "skip": "n",
+        "padding": "none"
+      }
     },
     "ReLU": {
-      "description": "ReLU is a rectified linear unit and it works on a real scalar by returning zero when negative, \r\n otherwise the scalar's value",
-      "external_link": "",
+      "description": "ReLU is a rectified linear unit and it works on a real scalar by returning zero when negative, \r\n otherwise the scalar's value.",
+      "external_link": "http://cs231n.github.io/convolutional-networks/#conv",
       "external_image": ""
     },
-    "MaxPool": {
-      "description": "MaxPool simply returns the maximum scalar value within typically a square area of a particular size \r\n from the input. This causes the size of the output to be scaled down by a factor. For instance, a maxpool over a \r\n size of 4x4 reduces the output by a factor of 4, with respect to the input",
-      "external_link": "",
-      "external_image": ""
+    "Pooling": {
+      "description": "Pooling simply returns a scalar value within typically a square area of a particular size \r\n from the input. This causes the size of the output to be scaled down by a factor. For instance, a maxpool over a \r\n size of 4x4 reduces the output by a factor of 4, with respect to the input.",
+      "external_link": "http://cs231n.github.io/convolutional-networks/#pool",
+      "external_image": "",
+      "settings": {
+        "pool_size": "mxn"
+      }
+    },
+    "Fully Connected": {
+      "description": "Fully Connected layer connects all the input units from one layer to each of the units of the next layer.\r\nThis can be used to scale from certain number of units say 1024 at one layer to 256 units at the next layer.",
+      "external_link": "http://cs231n.github.io/convolutional-networks/#fc",
+      "external_image": "",
+      "settings": {
+        "output_units": "n"
+      }
     }
   }
 }

@@ -76,12 +76,20 @@ pre .cl {
   clear:both;
 }
 
-.chosenComponents  ul.list-group:after {
+.chosencomponents  ul.list-group:after {
   clear: both;
   display: block;
   content: "";
 }
 
-.chosenComponents .list-group-item {
+.chosencomponents .list-group-item {
     float: left;
+}
+
+fieldset.csettings input {
+  font-family: monospace;
+  float: center;
+}
+fieldset.csettings label:after {
+  content: ": ";
 }
