@@ -47,7 +47,7 @@
       "description": "Softmax layer computes probability distribution of across each of the inputs using softmax function \r\n",
       "external_link": "https://en.wikipedia.org/wiki/Softmax_function",
       "external_image": ""
-    },
+    }
 
   }
 }
