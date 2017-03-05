@@ -7,24 +7,19 @@
       "external_link": "http://cs231n.github.io/convolutional-networks/#conv",
       "external_image": "",
       "settings": {
-        "kernel_size": "nxn",
-        "stride": "n",
-        "output_channels": "n",
-        "skip": "n",
-        "padding": "none"
+        "num_output": "n",
+        "pad": "n",
+        "kernel_size": "n"
       }
-    },
-    "ReLU": {
-      "description": "ReLU is a rectified linear unit and it works on a real scalar by returning zero when negative, \r\n otherwise the scalar's value.",
-      "external_link": "http://cs231n.github.io/convolutional-networks/#conv",
-      "external_image": ""
     },
     "Pooling": {
       "description": "Pooling simply returns a scalar value within typically a square area of a particular size \r\n from the input. This causes the size of the output to be scaled down by a factor. For instance, a maxpool over a \r\n size of 4x4 reduces the output by a factor of 4, with respect to the input.",
       "external_link": "http://cs231n.github.io/convolutional-networks/#pool",
       "external_image": "",
       "settings": {
-        "pool_size": "mxn"
+        "pool": "MAX:MEAN",
+        "kernel_size": "n",
+        "stride": "n"
       }
     },
     "Fully Connected": {
@@ -32,8 +27,27 @@
       "external_link": "http://cs231n.github.io/convolutional-networks/#fc",
       "external_image": "",
       "settings": {
-        "output_units": "n"
+        "num_output": "n"
       }
-    }
+    },
+    "Drop Out": {
+      "description": "Drop out layer affords the appearance of training on an ensemble of networks, by simply choosing to omit \r\n a certain fraction of outputs. Usually specified as a fraction, which is akin to eliminating that \r\n  unit from the network as many times, during forward and backward propagation.",
+      "external_link": "https://en.wikipedia.org/wiki/Convolutional_neural_network#Dropout",
+      "external_image": "",
+      "settings": {
+        "dropout_ratio": "f"
+      }
+    },
+    "ReLU": {
+      "description": "ReLU is a rectified linear unit and it works on a real scalar by returning zero when negative, \r\n otherwise the scalar's value.",
+      "external_link": "http://cs231n.github.io/convolutional-networks/#conv",
+      "external_image": ""
+    },
+    "Softmax": {
+      "description": "Softmax layer computes probability distribution of across each of the inputs using softmax function \r\n",
+      "external_link": "https://en.wikipedia.org/wiki/Softmax_function",
+      "external_image": ""
+    },
+
   }
 }

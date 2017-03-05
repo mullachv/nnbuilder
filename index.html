@@ -25,13 +25,38 @@
         return {
           components: function(callback) {
             allData().done(function(data) {
-              callback(data.components);
+              callback(data.components);//'components' element from components.json
             });
           }
         };
       })();
 
-      var $neuralNet = [{}];
+      //Object that contains all the current elements in the scratchpad and their saved settings
+      var $neuralNet = (function(){
+        var object_templates = [{}];
+        var initfn = $compDetails.components(function(data) {
+          $.each(data, function(n, v) {
+            console.log('data[' + n + ']: ' + v);
+            object_templates.push({name: n, properties: v});
+          })
+        });
+ 
+        //Mar 4 -- @TODO add .data property to the component panel buttons
+        var cnodes = $componentPanel.children(':button');
+        return {
+          delta: function() {
+            //deltafn();
+          },
+          initialize: function() {
+            console.log("initializing neuralNet object");
+            return initfn;
+          }
+        };
+
+      })();
+
+      $neuralNet.initialize();
+      //$neuralNet.delta();
 
       $(".chosencomponents").sortable();
 
@@ -52,16 +77,6 @@
         drop: function(event, ui) {
           //addComponent(ui.draggable)
           addComponent(ui);
-        }
-      });
-
-      $componentPanel.droppable({
-        accept: "#mainpanel li",
-        classes: {
-          "ui-droppable-active": "custom-state-active"
-        },
-        drop: function(event, ui) {
-          removeComponent(ui.draggable);//take the image out of the mainPanel
         }
       });
 
@@ -98,8 +113,23 @@
               strText = "<div width='384' height='288' style='display: none; padding: 8px; text-align: left'><form><ul><fieldset class='csettings'><legend></legend>";
               $.each(v.settings, function(sn, sv) {
                 containsSettingsElements = 1;
-                //strText = "<li><label class='csettings' for='" + sn + "'>" + sn + "</label><input type='number' id='" + sn + "' size='5'/></li>";
-                strText = strText + "<li><label for='" + sn + "'>" + sn + "</label> " + "<input type='number' name='" + sn + "' size=5 maxlength=5 /></li>";
+                if (sv == "n") {
+                  strText = strText + "<li><label for='" + sn + "'>" + sn + "</label> " + "<input type='number' name='" + sn + "' size=5 maxlength=5 /></li>";
+                } else if (sv == "text") {
+                  strText = strText + "<li><label for='" + sn + "'>" + sn + "</label> " + "<input type='text' name='" + sn + "' size=5 maxlength=5 /></li>";
+                } else if (sv == "f") {
+                  strText = strText + "<li><label for='" + sn + "'>" + sn + "</label> " + "<input type='range' name='" + sn + "' min=0 max=1 /></li>";
+                } else if (sv.match(/:/)) {
+                  //dropdown choices
+                  var choices = sv.split(":");
+                  var strChoices = "<select id=" + sn + ">";
+                  for (var i = 0; i < choices.length; i++) {
+                    strChoices += "<option value='" + choices[i] + "'>" + choices[i] + "</option>";
+                  }
+                  strChoices += "</select>";
+                  //console.log("strc: " + strChoices);
+                  strText = strText + "<li><label for='" + sn + "'>" + sn + "</label> " + strChoices + "</li>";
+                }
               });
               if (containsSettingsElements == 1) {
                 strText = strText + "<button class='btn btn-large btn-primary'><span class='glyphicon glyphicon-floppy-disk'></span></button>";
@@ -222,8 +252,12 @@
           <button type="button" class="btn btn-default btn-xs">Th-Lua</button>
         </div>
 
-        <div class="btn-group" role="group" style="position:absolute; top:0%; left:40%; width:60%; height:10%; z-index:100;">
+        <div class="btn-group" role="group" style="position:absolute; top:0%; left:30%; width:20%; height:10%; z-index:100;">
           <button type="button" class="btn btn-primary btn-lg">Generate Code</button>
+        </div>
+
+        <div class="btn-group" role="group" style="position:absolute; top:0%; left:50%; width:20%; height:10%; z-index:100;">
+          <button type="button" class="btn btn-primary btn-lg">Generate Prototxt</button>
         </div>
 
         <div class="tab-content" style="position:absolute; top:15%; left:0%; width:100%; height:95%;">
