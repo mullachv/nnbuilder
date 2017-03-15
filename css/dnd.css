@@ -1,0 +1,61 @@
+.list {
+  float: left;
+  margin-left: 5px;
+  width: 100px;
+  height: 200px;
+}
+
+.red {
+  border: 1px solid red;
+}
+
+.green {
+  border: 1px solid green;
+}
+
+.item {
+  width: 98px;
+  border: 1px solid;
+}
+
+.red .item {
+  background-color: red;
+}
+
+.green .item {
+  background-color: green;
+}
+
+.dragover,
+.dragging {
+  border: 2px solid;
+}
+
+#description {
+  float: left;
+  margin-left: 20px;
+
+}
+
+/** Tag line style **/
+.navbar-inverse {
+    height: 50px;
+    margin: 50px 0px 80px;
+}
+.brand-img {
+    border-radius: 50%;
+    position: relative;
+    top: -37px;
+    height: 128px;
+    width: 128px;
+}
+@media (max-width: 768px) {
+    .navbar-header {
+        float: left;
+        padding-left: 25px;
+    }
+    .navbar ul {
+        float: right;
+        display: inline-flex;
+    }
+}

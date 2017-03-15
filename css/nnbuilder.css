@@ -93,3 +93,9 @@ fieldset.csettings input {
 fieldset.csettings label:after {
   content: ": ";
 }
+
+div.cp-help {
+  display: none;
+  padding: 8px;
+  text-align: left;
+}

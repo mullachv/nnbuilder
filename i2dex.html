@@ -1,15 +1,32 @@
 <!doctype html>
-<html lang="en" ng-app="myApp" ng-strict-di>
+
+<!-- Using ngstrictdi (ng-strict-di) below, causes function($templateUrl) injection errors -->
+<html lang="en" ng-app="myApp">
 
   <head>
     <title>Neural Net Builder</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <script crossorigin="anonymous" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular.js"></script>
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+    <script crossorigin="anonymous" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular.js"></script>
+    <script crossorigin="anonymous" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js"></script>
+    <script crossorigin="anonymous" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-route.min.js"></script>
+    <script crossorigin="anonymous" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-aria.min.js"></script>
+    <script crossorigin="anonymous" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-messages.min.js"></script>
+    <script crossorigin="anonymous" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-114/svg-assets-cache.js"></script>
+    <script crossorigin="anonymous" src="https://cdn.gitcdn.link/cdn/angular/bower-material/v1.1.3/angular-material.js"></script>
+    <script src="//code.angularjs.org/1.2.20/angular-sanitize.js"></script>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic">
+    <link rel="stylesheet" href="https://cdn.gitcdn.link/cdn/angular/bower-material/v1.1.3/angular-material.css">
+    <link rel="stylesheet" href="https://material.angularjs.org/1.1.3/docs.css">
+    <link rel="stylesheet" type="text/css" href="css/mddiag.css">
+
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="css/nnbuilder.css">
+
     <script src="ts_output_readonly_do_NOT_change_manually/src/common.js"></script>
   </head>
 
@@ -18,36 +35,46 @@
     <div class="container" style="position:absolute; top:5%; left:5%; width:90%; height:90%;">
 
       <!-- components on the left -->
-      <div class="ui-widget ui-helper-clearfix toolspanel" style="position:absolute; top:0%; left:0%; width:20%; height:100%;">
+      <div ng-controller='DialogCtrl' class="ui-widget ui-helper-clearfix toolspanel" style="position:absolute; top:0%; left:0%; width:20%; height:100%;">
+
         <ul id="componentpanel" class="componentpanel ui-helper-reset ui-helper-clearfix">
-          <li ng-repeat="ctype in common.getAvailableComponentTypes()">
-            <button ng-class="ctype.btnclass">
-              <span ng-class="ctype.spanclass"></span>
+          <li ng-repeat="ctype in common.getAvailableComponentTypes()" >
+            <button ng-class="ctype.btnclass" data-nnctype='{{ctype.typename}}' draggable>
               {{ctype.typename}}
+              <span ng-class="ctype.spanclass" ng-click="showAlert($event, ctype.typename, ctype.typedescription, ctype.typeurl)"></span>
+            </button>
+          </li>
+        </ul>
+
+      </div>
+
+      <!-- Main -->
+      <div id="mainpanel" class="ui-widget-content ui-state-default"
+      style="position:absolute; top:0%; left:20%; width:80%; height:60%; overflow:auto" droppable>
+        <h4 class="ui-widget-header"><span class="ui-icon">Scratchpad</span>Scratchpad (Left to Right)</h4>
+        <ul class='chosencomponents ui-helper-reset list-group sortable'>
+          <li ng-repeat='nc in common.getCurrentComponents()' class='list-group-item'>
+            <button ng-class="nc.getNNCButtonClass()" data-nncid='{{nc.id}}'>
+              {{nc.getTypeName()}}
+              <span ng-class="nc.getNNCSpanClass(0)"></span>
+              <span ng-class="nc.getNNCSpanClass(1)"></span>
             </button>
           </li>
         </ul>
       </div>
 
-      <!-- Main -->
-      <div id="mainpanel" class="ui-widget-content ui-state-default"
-      style="position:absolute; top:0%; left:20%; width:80%; height:60%; overflow:auto">
-        <h4 class="ui-widget-header"><span class="ui-icon">Scratchpad</span>Scratchpad (Left to Right)</h4>
-        <ul class='chosencomponents ui-helper-reset list-group'/>
-      </div>
-
       <div class="codepanel jumbotron" style="position:absolute; top:60%; left:20%; width:80%; height:40%;overflow:auto">
 
         <!-- framework -->
-        <div class="btn-group" role="group" style="position:absolute; top:0%; left:0%; width:40%; height:5%;">
+        <div class="btn-group" role="group" style="position:absolute; top:0%; left:0%; width:40%; height:5%; z-index:1">
           <button ng-repeat="fwk in common.getAvailableFrameworks()" type="button" class="btn btn-default btn-s">{{fwk}}</button>
         </div>
 
-        <div class="btn-group" role="group" style="position:absolute; top:0%; left:30%; width:20%; height:10%; z-index:100;">
+        <div class="btn-group" role="group" style="position:absolute; top:0%; left:30%; width:20%; height:10%; z-index:1">
           <button type="button" class="btn btn-primary btn-lg">Generate Code</button>
         </div>
 
-        <div class="btn-group" role="group" style="position:absolute; top:0%; left:50%; width:20%; height:10%; z-index:100;">
+        <div class="btn-group" role="group" style="position:absolute; top:0%; left:50%; width:20%; height:10%; z-index:1">
           <button type="button" class="btn btn-primary btn-lg">Generate Prototxt</button>
         </div>
 
