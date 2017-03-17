@@ -1,3 +1,16 @@
+var FieldType;
+(function (FieldType) {
+    FieldType[FieldType["BOOL"] = 0] = "BOOL";
+    FieldType[FieldType["INT"] = 1] = "INT";
+    FieldType[FieldType["FLOAT"] = 2] = "FLOAT";
+    FieldType[FieldType["STRING"] = 3] = "STRING";
+    FieldType[FieldType["ENUMERATION"] = 4] = "ENUMERATION";
+})(FieldType || (FieldType = {}));
+var FieldSetting = (function () {
+    function FieldSetting() {
+    }
+    return FieldSetting;
+}());
 var NNComponentType;
 (function (NNComponentType) {
     NNComponentType[NNComponentType["ConvNet2D"] = 0] = "ConvNet2D";
@@ -31,11 +44,88 @@ var NNComponent = (function () {
     };
     return NNComponent;
 }());
-var PoolType;
-(function (PoolType) {
-    PoolType[PoolType["MAX"] = 0] = "MAX";
-    PoolType[PoolType["MEAN"] = 1] = "MEAN";
-})(PoolType || (PoolType = {}));
+function create_ConvNet2D_Settings() {
+    var NumOutputField = new FieldSetting();
+    NumOutputField.fieldlabel = 'Number of output';
+    NumOutputField.fieldname = 'num_output';
+    NumOutputField.fieldtype = FieldType.INT;
+    NumOutputField.fieldrequired = true;
+    var PadField = new FieldSetting();
+    PadField.fieldlabel = 'Padding Size';
+    PadField.fieldname = 'pad';
+    PadField.fieldtype = FieldType.INT;
+    PadField.fieldrequired = false;
+    var KernelSizeField = new FieldSetting();
+    KernelSizeField.fieldlabel = 'Kernel Size';
+    KernelSizeField.fieldname = 'kernel_size';
+    KernelSizeField.fieldtype = FieldType.INT;
+    KernelSizeField.fieldrequired = true;
+    var ConvNet2D_Settings = [];
+    ConvNet2D_Settings.push(NumOutputField);
+    ConvNet2D_Settings.push(PadField);
+    ConvNet2D_Settings.push(KernelSizeField);
+    return ConvNet2D_Settings;
+}
+function create_FullyConnected_Settings() {
+    var NumOutputField = new FieldSetting();
+    NumOutputField.fieldlabel = 'Number of output';
+    NumOutputField.fieldname = 'num_output';
+    NumOutputField.fieldtype = FieldType.INT;
+    NumOutputField.fieldrequired = true;
+    var FullyConnected_Settings = [];
+    FullyConnected_Settings.push(NumOutputField);
+    return FullyConnected_Settings;
+}
+function create_Dropout_Settings() {
+    var DropoutField = new FieldSetting();
+    DropoutField.fieldlabel = 'Dropout Fraction';
+    DropoutField.fieldname = 'dropout_ratio';
+    DropoutField.fieldtype = FieldType.FLOAT;
+    DropoutField.fieldrequired = true;
+    var Dropout_Settings = [];
+    Dropout_Settings.push(DropoutField);
+    return Dropout_Settings;
+}
+function create_ReLU_Settings() {
+    var ReLU_Settings = [];
+    return ReLU_Settings;
+}
+function create_Softmax_Settings() {
+    var Softmax_Settings = [];
+    return Softmax_Settings;
+}
+var PoolingType;
+(function (PoolingType) {
+    PoolingType[PoolingType["MAX"] = 0] = "MAX";
+    PoolingType[PoolingType["MEAN"] = 1] = "MEAN";
+    PoolingType[PoolingType["MIN"] = 2] = "MIN";
+})(PoolingType || (PoolingType = {}));
+function create_Pooling_Settings() {
+    var PoolType = new FieldSetting();
+    PoolType.fieldlabel = 'Pooling Type';
+    PoolType.fieldname = 'pool_type';
+    PoolType.fieldtype = FieldType.ENUMERATION;
+    PoolType.fieldrequired = true;
+    PoolType.fieldvaluechoices = [];
+    PoolType.fieldvaluechoices.push(PoolingType[PoolingType.MAX]);
+    PoolType.fieldvaluechoices.push(PoolingType[PoolingType.MIN]);
+    PoolType.fieldvaluechoices.push(PoolingType[PoolingType.MEAN]);
+    var KernelSizeField = new FieldSetting();
+    KernelSizeField.fieldlabel = 'Kernel Size';
+    KernelSizeField.fieldname = 'kernel_size';
+    KernelSizeField.fieldtype = FieldType.INT;
+    KernelSizeField.fieldrequired = true;
+    var StrideField = new FieldSetting();
+    StrideField.fieldlabel = 'Stride Size';
+    StrideField.fieldname = 'stride';
+    StrideField.fieldtype = FieldType.INT;
+    StrideField.fieldrequired = false;
+    var Pooling_Settings = [];
+    Pooling_Settings.push(PoolType);
+    Pooling_Settings.push(KernelSizeField);
+    Pooling_Settings.push(StrideField);
+    return Pooling_Settings;
+}
 var common;
 (function (common) {
     var availableComponentTypes = [];
@@ -44,6 +134,7 @@ var common;
     var nnSeqId = 1000;
     var scope;
     var helpTypeName = '';
+    //export let screenvalues:any = [];
     function init(rootScope) {
         scope = rootScope;
         //use $http service
@@ -94,6 +185,40 @@ var common;
         availableFrameworks = ['PyTorch', 'Torch', 'Tensorflow'];
     }
     common.init = init;
+    function findItemIndex(ncid) {
+        var index = 0;
+        for (var _i = 0, neuralNet_1 = neuralNet; _i < neuralNet_1.length; _i++) {
+            var nc = neuralNet_1[_i];
+            if (nc.id == ncid) {
+                return index;
+            }
+            index++;
+        }
+        return -1;
+    }
+    function getfielditems(ncid) {
+        console.log('Looking for: ' + ncid);
+        var index = findItemIndex(ncid);
+        if (index == -1) {
+            return null;
+        }
+        return neuralNet[index].settings;
+    }
+    common.getfielditems = getfielditems;
+    function getfieldvaluesbyname(ncid) {
+        console.log('Looking for: ' + ncid);
+        var index = findItemIndex(ncid);
+        if (index == -1) {
+            return null;
+        }
+        var fvbyname = [{}];
+        for (var _i = 0, _a = neuralNet[index].settings; _i < _a.length; _i++) {
+            var it_1 = _a[_i];
+            fvbyname[it_1.fieldname] = it_1.fieldvalue;
+        }
+        return fvbyname;
+    }
+    common.getfieldvaluesbyname = getfieldvaluesbyname;
     function getCurrentComponents() {
         return neuralNet;
     }
@@ -105,10 +230,61 @@ var common;
         nc.type = ct;
         nc.id = nnSeqId;
         nc.name = NNComponentType[ct] + "_" + nc.id;
+        switch (NNComponentType[ct]) {
+            case NNComponentType[NNComponentType.ConvNet2D]:
+                nc.settings = create_ConvNet2D_Settings();
+                break;
+            case NNComponentType[NNComponentType.Pooling]:
+                nc.settings = create_Pooling_Settings();
+                break;
+            case NNComponentType[NNComponentType.FullyConnected]:
+                nc.settings = create_FullyConnected_Settings();
+                break;
+            case NNComponentType[NNComponentType.DropOut]:
+                nc.settings = create_Dropout_Settings();
+                break;
+            case NNComponentType[NNComponentType.ReLU]:
+                nc.settings = create_ReLU_Settings();
+                break;
+            case NNComponentType[NNComponentType.Softmax]:
+                nc.settings = create_Softmax_Settings();
+                break;
+        }
         neuralNet.push(nc);
         nnSeqId++;
     }
     common.addToNN = addToNN;
+    function removeFromNN(ncid) {
+        var index = 0;
+        for (var _i = 0, neuralNet_2 = neuralNet; _i < neuralNet_2.length; _i++) {
+            var nc = neuralNet_2[_i];
+            if (nc.id == ncid) {
+                neuralNet.splice(index, 1);
+                return;
+            }
+            index++;
+        }
+    }
+    common.removeFromNN = removeFromNN;
+    function saveNNCProps(ncid, userresponse) {
+        var index = findItemIndex(ncid);
+        if (index == -1) {
+            return;
+        }
+        var nc = neuralNet[index];
+        for (var key in userresponse) {
+            setfieldvalue(nc, key, userresponse[key]);
+        }
+    }
+    common.saveNNCProps = saveNNCProps;
+    function setfieldvalue(nc, fieldname, fieldvalue) {
+        for (var i = 0; i < nc.settings.length; i++) {
+            if (nc.settings[i].fieldname == fieldname) {
+                nc.settings[i].fieldvalue = fieldvalue;
+                return;
+            }
+        }
+    }
     function updateUI() {
         scope.$apply();
     }
@@ -186,7 +362,6 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
     };
 })
     .controller('DialogCtrl', ['$scope', '$mdDialog', function ($scope, $mdDialog) {
-        $scope.status = '  ';
         $scope.customFullscreen = false;
         $scope.showAlert = function (ev, typename, typedescription, typeurl) {
             // Appending dialog to document.body to cover sidenav in docs app
@@ -200,31 +375,56 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
                 .ok('Got it!')
                 .targetEvent(ev));
         };
-        $scope.showAdvanced = function (ev, typename) {
-            var templateUrl = 'dialog1.' + typename + '.tmpl.html';
-            $mdDialog.show({
-                controller: DialogController,
-                templateUrl: templateUrl,
-                parent: angular.element(document.body),
-                targetEvent: ev,
-                clickOutsideToClose: true,
-                fullscreen: $scope.customFullscreen // Only for -xs, -sm breakpoints.
-            })
-                .then(function (answer) {
-                $scope.status = 'You said the information was "' + answer + '".';
-            }, function () {
-                $scope.status = 'You cancelled the dialog.';
-            });
+    }])
+    .controller('EditDeleteCtrl', ['$scope', '$mdDialog', function ($scope, $mdDialog) {
+        $scope.deleteComponent = function (ev, ncid) {
+            //console.log('nncid: ' + ncid);
+            $scope.common.removeFromNN(ncid);
         };
-        function DialogController($scope, $mdDialog) {
-            $scope.hide = function () {
-                $mdDialog.hide();
-            };
-            $scope.cancel = function () {
-                $mdDialog.cancel();
-            };
-            $scope.answer = function (answer) {
-                $mdDialog.hide(answer);
-            };
-        }
+        $scope.editComponent = function ($event, ncid) {
+            var pEl = angular.element(document.body);
+            $mdDialog.show({
+                parent: pEl,
+                targetEvent: $event,
+                template: '<md-dialog aria-label="List dialog">' +
+                    '  <md-dialog-content>' +
+                    '    <md-list>' +
+                    '      <md-list-item ng-repeat="item in items">' +
+                    '          <label>{{item.fieldlabel}}</label>' +
+                    '            <input ng-model="CValues[item.fieldname]" size="10" placeholder="test..">' +
+                    '      </md-list-item>' +
+                    '    </md-list>' +
+                    '  </md-dialog-content>' +
+                    '  <md-dialog-actions>' +
+                    '    <md-button ng-click="saveDialog()" class="md-primary">' +
+                    '      Save Dialog' +
+                    '    </md-button>' +
+                    '    <md-button ng-click="closeDialog()" class="md-primary">' +
+                    '      Close Dialog' +
+                    '    </md-button>' +
+                    '  </md-dialog-actions>' +
+                    '</md-dialog>',
+                locals: {
+                    items: $scope.common.getfielditems(ncid),
+                    fieldvalues: $scope.common.getfieldvaluesbyname(ncid)
+                },
+                controller: dlgController
+            }).then(function (resp) {
+                // console.log(resp);
+                $scope.common.saveNNCProps(ncid, resp);
+            }, function () {
+                //otherwise -- close dialog
+            });
+            function dlgController($scope, $mdDialog, items, fieldvalues) {
+                $scope.items = items;
+                $scope.CValues = fieldvalues;
+                $scope.closeDialog = function () {
+                    $mdDialog.hide();
+                };
+                $scope.saveDialog = function () {
+                    // console.log($scope.CValues);
+                    $mdDialog.hide($scope.CValues);
+                };
+            }
+        };
     }]);

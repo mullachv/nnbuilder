@@ -49,15 +49,17 @@
       </div>
 
       <!-- Main -->
-      <div id="mainpanel" class="ui-widget-content ui-state-default"
+      <div ng-controller='EditDeleteCtrl' id="mainpanel" class="ui-widget-content ui-state-default"
       style="position:absolute; top:0%; left:20%; width:80%; height:60%; overflow:auto" droppable>
         <h4 class="ui-widget-header"><span class="ui-icon">Scratchpad</span>Scratchpad (Left to Right)</h4>
         <ul class='chosencomponents ui-helper-reset list-group sortable'>
           <li ng-repeat='nc in common.getCurrentComponents()' class='list-group-item'>
             <button ng-class="nc.getNNCButtonClass()" data-nncid='{{nc.id}}'>
               {{nc.getTypeName()}}
-              <span ng-class="nc.getNNCSpanClass(0)"></span>
-              <span ng-class="nc.getNNCSpanClass(1)"></span>
+              <!-- Edit Settings -->
+              <span ng-class="nc.getNNCSpanClass(0)" ng-click='editComponent($event, nc.id)'></span>
+              <!-- Delete button -->
+              <span ng-class="nc.getNNCSpanClass(1)" ng-click='deleteComponent($event, nc.id)'></span>
             </button>
           </li>
         </ul>
