@@ -29,6 +29,7 @@ interface INNComponent {
   getNNCButtonClass():string;
   getNNCSpanClass(ix:number):string;
   getTypeName():string;
+  convertToJSON():any;
 }
 
 class NNComponent implements INNComponent {
@@ -59,6 +60,53 @@ class NNComponent implements INNComponent {
       return 'glyphicon glyphicon-wrench';
     }
     return 'glyphicon glyphicon-remove-sign';
+  }
+
+  convertToJSON():any {
+    let layer:any = {};
+    layer.name = this.name;
+    layer.top = this.name;
+
+    let scvalues:any = common.getfieldvaluesbyname(this.id);
+    switch(NNComponentType[this.type]) {
+      case NNComponentType[NNComponentType.ConvNet2D]:
+          layer.type = "CONVOLUTION";
+          layer.convolution_param = {
+            num_output: scvalues['num_output'],
+            pad: scvalues['pad'],
+            kernel_size: scvalues['kernel_size']
+          };
+          break;
+      case NNComponentType[NNComponentType.Pooling]:
+        layer.type = "POOLING";
+        layer.pooling_param = {
+          pool: scvalues['pool'],
+          kernel_size: scvalues['kernel_size'],
+          stride: scvalues['stride']
+        };
+        break;
+      case NNComponentType[NNComponentType.FullyConnected]:
+        layer.type = "INNER_PRODUCT";
+        layer.pooling_param = {
+          num_output: scvalues['num_output']
+        };
+        break;
+      case NNComponentType[NNComponentType.DropOut]:
+        layer.type = "DROPOUT";
+        layer.dropout_param = {
+          dropout_ratio: scvalues['dropout_ratio']
+        };
+        break;
+      case NNComponentType[NNComponentType.ReLU]:
+        layer.type = "RELU";
+        break;
+      case NNComponentType[NNComponentType.Softmax]:
+        layer.type = "SOFTMAX";
+        break;
+    }
+    return layer;
+    // let str = JSON.stringify(layer);
+    // return 'layers  ' + str ;
   }
 
 }
@@ -173,8 +221,8 @@ module common {
   let nnSeqId = 1000;
   let scope:angular.IScope;
   let helpTypeName = '';
-
-  //export let screenvalues:any = [];
+  let net_name = "";
+  let net_dataset:any;
 
   export function init(rootScope:angular.IScope) {
     scope = rootScope;
@@ -238,7 +286,6 @@ module common {
   }
 
   export function getfielditems(ncid:number):any {
-    console.log('Looking for: ' + ncid);
     let index = findItemIndex(ncid);
     if (index == -1) {
         return null;
@@ -247,7 +294,6 @@ module common {
   }
 
   export function getfieldvaluesbyname(ncid: number):any {
-    console.log('Looking for: ' + ncid);
     let index = findItemIndex(ncid);
     if (index == -1) {
         return null;
@@ -317,15 +363,46 @@ module common {
     scope.$apply();
   }
 
-  export function describeComponent(typename:string) {
-    helpTypeName = typename;
+  export function setDataSet() {
+    //NN dataset
   }
 
-  export function showHelp(typename:string) {
-    if (helpTypeName == typename) {
-      return true;
+  function getinputdims() {
+    if (net_dataset) {
+      //dataset input dimensions
+      return [1,2,3];
     }
-    return false;
+    return [];
+  }
+
+  function nnProtoHeaders():any {
+    let d = new Date();
+    let header = "name:" + "NN_" + d.getFullYear() + (d.getMonth() +1) +
+      d.getDay() + d.getHours() + d.getMinutes() + d.getSeconds() +
+      "_" + net_name + "_" + neuralNet.length + "_layers\n";
+
+    header += "input: \"data\"\n";
+    for(let dim of getinputdims()) {
+      header += "input_dim: " + dim + "\n";
+    }
+    return header;
+  }
+
+  export function generateProto() {
+    let comps = [];
+    let prevlayer;
+    let prototxt = nnProtoHeaders();
+    for(let nn of neuralNet) {
+      let layer = nn.convertToJSON();
+      if(!prevlayer) {
+        layer.bottom = "data";
+      } else {
+        layer.bottom = prevlayer.name;
+      }
+      prototxt += "layers " + JSON.stringify(layer) + "\n";
+      prevlayer = layer;
+    }
+    return prototxt;
   }
 
   export function getAvailableComponentTypes() {
@@ -338,7 +415,7 @@ module common {
 
 }
 
-angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 'ngSanitize'])
+angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 'ngSanitize', 'ngResource'])
   .run(['$rootScope', '$templateCache', function($rootScope:angular.IScope, $templateCache:any) {
     $templateCache.put('myApp', 'myApp');
     $rootScope['common'] = common;
@@ -405,7 +482,7 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
   .controller('DialogCtrl', ['$scope', '$mdDialog', function($scope:any, $mdDialog:any) {
     $scope.customFullscreen = false;
 
-    $scope.showAlert = function(ev:any, typename:string, typedescription:string, typeurl:string) {
+    $scope.showInfo = function(ev:any, typename:string, typedescription:string, typeurl:string) {
       // Appending dialog to document.body to cover sidenav in docs app
       // Modal dialogs should fully cover application
       // to prevent interaction outside of dialog
@@ -480,4 +557,46 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
     }
 
   }])
+  .directive('generateProto', function() {
+    return {
+        restrict: 'E',
+        template: '<a href="" class="btn btn-primary btn-lg" ng-click="downloadJson()">Download Prototxt</a>',
+        scope: true,
+        link: function(scope, element, attr) {
+            var anchor = element.children()[0];
+            // When the download starts, disable the link
+            scope.$on('download-start', function() {
+                console.log('download-start event');
+                $(anchor).attr('disabled', 'disabled');
+            });
+
+            // When the download finishes, attach the data to the link. Enable the link and change its appearance.
+            scope.$on('downloaded', function(event, data) {
+              console.log('on downloaded');
+                $(anchor).attr({
+                    href: 'data:application/test;base64,' + data,
+                    download: attr.filename
+                })
+                .removeAttr('disabled');
+                // .text('Save')
+                // .removeClass('btn-primary')
+                // .addClass('btn-success');
+
+                //Also overwrite the download pdf function to do nothing.
+                // scope.downloadJson = function() {
+                //
+                // };
+            });
+        },
+        controller: [ '$scope', '$attrs', function getDataController($scope:any, $attrs:any) {
+          $scope.downloadJson = function() {
+              $scope.$emit('download-start');
+              console.log('emitted download start event');
+              var filedata = btoa(unescape(encodeURIComponent($scope.common.generateProto())));
+              $scope.$emit('downloaded', filedata);
+          };
+        }]
+      };
+
+})
 ;

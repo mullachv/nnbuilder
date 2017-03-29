@@ -30,9 +30,9 @@
         "placeOpenBraceOnNewLineForControlBlocks": false
     },
     "files": [
+        "./src/builder_test.ts",
         "./src/check.ts",
         "./src/common.ts",
-        "./src/end_to_end_tests.ts",
         "./src/net_test.ts",
         "./src/services.ts",
         "./typings/angular-protractor/angular-protractor.d.ts",

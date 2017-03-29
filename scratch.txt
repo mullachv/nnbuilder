@@ -1,0 +1,222 @@
+angular.module('questApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache'])
+
+  .controller('DemoCtrl', function($scope, $mdDialog, $mdMedia) {
+    $scope.status = '  ';
+    var questList = this;
+    questList.allsQ = [];
+    questList.openDialog = function($event) {
+      $mdDialog.show({
+        controller: function ($timeout, $q, $scope, $mdDialog) {
+                var questList =this;
+                $scope.cancel = function($event) {
+                $mdDialog.cancel();
+                };
+                $scope.finish = function($event) {
+                $mdDialog.hide();
+                };
+                $scope.answer = function(answer) {
+                $mdDialog.hide(answer);
+                };
+                },
+        controllerAs: 'questList',
+        templateUrl: 'dialog.tmpl.html',
+        parent: angular.element(document.body),
+        targetEvent: $event,
+        clickOutsideToClose:true,
+        locals: {parent: $scope},
+      })
+     .then(function(answer) {
+        console.log("answer")
+        console.log(answer)
+      questList.allsQ.push({
+         titolo: answer.titolo ,
+         capitolo: answer.capitolo,
+         descrizione: answer.descrizione,
+         importo: answer.importo,
+         data: answer.data
+      });
+      questList.titolo = '';
+      questList.capitolo = '';
+      questList.descrizione = '';
+      questList.importo = '';
+      questList.data = '';
+      console.log(questList.allsQ);
+      console.log(questList.allsQ.length);
+    });
+    };
+  });
+
+
+  =====
+
+
+  <html ng-app="questApp">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic">
+    <link rel="stylesheet" href="https://cdn.gitcdn.link/cdn/angular/bower-material/v1.0.8/angular-material.css">
+    <link rel="stylesheet" href="https://material.angularjs.org/1.0.8/docs.css">
+    <link rel="stylesheet" href="riprova.css">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-animate.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-route.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-aria.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-messages.min.js"></script>
+    <script type="text/javascript" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-114/svg-assets-cache.js"></script>
+    <script type="text/javascript" src="https://cdn.gitcdn.link/cdn/angular/bower-material/v1.0.8/angular-material.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" type="text/javascript"></script>
+    <script src="riprova.js"></script>
+  </head>
+  <body>
+    <div ng-cloak ng-controller="DemoCtrl as questList" class="tabsdemoDynamicHeight" ng-cloak="">
+      <md-content>
+        <md-tabs md-dynamic-height md-border-bottom>
+          <md-tab label="one">
+            <md-content class="md-padding">
+              <h1 class="md-display-2">Lista Movimenti</h1>
+              <md-button ng-click="questList.openDialog($event)" class="md-raised">Open Dialog</md-button>
+
+              <div  layout="column" layout-align="center" >
+                <md-card ng-repeat="quest in questList.allsQ" id="prova">
+                  <md-card-title>
+                    <md-card-title-text layout="row">
+                      <span flex layout ="column"><b>Titolo</b>{{quest.titolo}}</span>
+                      <span flex layout ="column"><b>Capitolo</b>{{quest.capitolo}}</span>
+                      <span flex layout ="column"><b>Descrizione</b>{{quest.descrizione}}</span>
+                      <span flex layout ="column"><b>Importo</b>{{quest.importo}}</span>
+                      <span flex layout ="column"><b>Data</b>{{quest.data}}</span>
+                      <md-button ng-click="questList.modifica()">Modifica</md-button>
+                      <md-button ng-click="questList.rimuovi()">Elimina</md-button>
+                    </md-card-title-text>
+                  </md-card-title>
+
+                </md-card>
+              </div>
+
+            </md-content>
+          </md-tab>
+          <md-tab label="two">
+            <md-content class="md-padding">
+              <h1 class="md-display-2">Subtotali</h1>
+
+            </md-content>
+          </md-tab>
+        </md-tabs>
+      </md-content>
+    </div>
+<script type="text/ng-template" id="dialog.tmpl.html">
+    <md-dialog aria-label="Autocomplete Dialog Example" ng-cloak>
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2>Autocomplete Dialog Example</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-svg-src="img/icons/ic_close_24px.svg" aria-label="Close dialog"></md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <div class="md-dialog-content">
+      <form role="form">
+                <div layout-gt-xs="row">
+                  <md-input-container class="md-block" flex-gt-xs="">
+                    <label>Titolo</label>
+                    <input ng-model="titolo"  size="30" placeholder="inserisci il titolo">
+                  </md-input-container>
+                  <md-datepicker ng-model="questList.data" md-placeholder="Inserisci data">
+                  </md-datepicker>
+                  <md-input-container class="md-block" flex-gt-xs="">
+                    <label>Capitolo</label>
+                    <input ng-model="questList.capitolo"  size="30" placeholder="inserisci il capitolo">
+                  </md-input-container>
+                  <md-input-container class="md-block">
+                    <label>Descrizione</label>
+                    <textarea ng-model="questList.descrizione" md-maxlength="150" rows="5" md-select-on-focus placeholder="inserisci la descrizione"></textarea>
+                  </md-input-container>
+                  <md-input-container class="md-icon-float md-icon-right md-block">
+                    <label>Importo</label>
+                    <input ng-model="questList.importo"  size="30" placeholder="inserisci l'importo" type="number" step="0.01">
+                    <md-icon md-svg-src="img/icons/ic_euro_24px.svg"></md-icon>
+                  </md-input-container>
+                  <md-button ng-click="answer(questList)" class="md-raised md-primary">Salva</md-button>
+                </div>
+              </form>
+    </div>
+  </md-dialog-content>
+</md-dialog>
+</script>
+  </body>
+</html>
+
+====
+template:
+  '<md-dialog aria-label="List dialog">' +
+  '  <md-dialog-content>'+
+  '    <md-list>'+
+  '      <md-list-item ng-repeat="item in items">'+
+  '       <p>Number {{item}}</p>' +
+  '      '+
+  '    </md-list-item></md-list>'+
+  '  </md-dialog-content>' +
+  '  <md-dialog-actions>' +
+  '    <md-button ng-click="closeDialog()" class="md-primary">' +
+  '      Close Dialog' +
+  '    </md-button>' +
+  '  </md-dialog-actions>' +
+  '</md-dialog>',
+
+==== Dialog works, but no form data ===
+
+.controller('EditDeleteCtrl', ['$scope', '$mdDialog', function($scope:any, $mdDialog:any) {
+  $scope.deleteComponent = function(ev:any, ncid:any) {
+    //console.log('nncid: ' + ncid);
+    $scope.common.removeFromNN(ncid);
+  }
+
+  $scope.editComponent = function ($event:any, ncid:number) {
+     var parentEl = angular.element(document.body);
+     $mdDialog.show({
+       parent: parentEl,
+       targetEvent: $event,
+       template:
+         '<md-dialog aria-label="List dialog">' +
+         '  <md-dialog-content>'+
+         '    <md-list>'+
+         '      <md-list-item ng-repeat="item in items">'+
+//           '        <md-input-container class="md-block">' +
+         '          <label>{{item.fieldlabel}}</label>' +
+         '            <input ng-model="myattr" size="10" placeholder="test..">' +
+//           '        </md-input-container>' +
+         '      </md-list-item>' +
+         '    </md-list>' +
+         '  </md-dialog-content>' +
+         '  <md-dialog-actions>' +
+         '    <md-button ng-click="saveDialog(myattr)" class="md-primary">' +
+         '      Save Dialog' +
+         '    </md-button>' +
+         '    <md-button ng-click="closeDialog()" class="md-primary">' +
+         '      Close Dialog' +
+         '    </md-button>' +
+         '  </md-dialog-actions>' +
+         '</md-dialog>',
+       locals: {
+         items: $scope.common.getsettings(ncid)
+         //myattr: ''
+       },
+       controller: dController
+    });
+
+    function dController($scope:any, $mdDialog:any, items:any, myattr:any) {
+      $scope.items = items;
+      $scope.myattr = myattr;
+      $scope.closeDialog = function() {
+        $mdDialog.hide();
+      }
+      $scope.saveDialog = function() {
+        console.log('saving..' + $scope.myattr);
+        console.log('saving..' + $scope.items);
+        $mdDialog.hide();
+      }
+    }
+  }

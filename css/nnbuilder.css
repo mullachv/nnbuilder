@@ -99,3 +99,7 @@ div.cp-help {
   padding: 8px;
   text-align: left;
 }
+
+a.nnhidden {
+  visibility: hidden;
+}

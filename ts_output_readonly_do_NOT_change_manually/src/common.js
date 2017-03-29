@@ -42,6 +42,51 @@ var NNComponent = (function () {
         }
         return 'glyphicon glyphicon-remove-sign';
     };
+    NNComponent.prototype.convertToJSON = function () {
+        var layer = {};
+        layer.name = this.name;
+        layer.top = this.name;
+        var scvalues = common.getfieldvaluesbyname(this.id);
+        switch (NNComponentType[this.type]) {
+            case NNComponentType[NNComponentType.ConvNet2D]:
+                layer.type = "CONVOLUTION";
+                layer.convolution_param = {
+                    num_output: scvalues['num_output'],
+                    pad: scvalues['pad'],
+                    kernel_size: scvalues['kernel_size']
+                };
+                break;
+            case NNComponentType[NNComponentType.Pooling]:
+                layer.type = "POOLING";
+                layer.pooling_param = {
+                    pool: scvalues['pool'],
+                    kernel_size: scvalues['kernel_size'],
+                    stride: scvalues['stride']
+                };
+                break;
+            case NNComponentType[NNComponentType.FullyConnected]:
+                layer.type = "INNER_PRODUCT";
+                layer.pooling_param = {
+                    num_output: scvalues['num_output']
+                };
+                break;
+            case NNComponentType[NNComponentType.DropOut]:
+                layer.type = "DROPOUT";
+                layer.dropout_param = {
+                    dropout_ratio: scvalues['dropout_ratio']
+                };
+                break;
+            case NNComponentType[NNComponentType.ReLU]:
+                layer.type = "RELU";
+                break;
+            case NNComponentType[NNComponentType.Softmax]:
+                layer.type = "SOFTMAX";
+                break;
+        }
+        return layer;
+        // let str = JSON.stringify(layer);
+        // return 'layers  ' + str ;
+    };
     return NNComponent;
 }());
 function create_ConvNet2D_Settings() {
@@ -134,7 +179,8 @@ var common;
     var nnSeqId = 1000;
     var scope;
     var helpTypeName = '';
-    //export let screenvalues:any = [];
+    var net_name = "";
+    var net_dataset;
     function init(rootScope) {
         scope = rootScope;
         //use $http service
@@ -197,7 +243,6 @@ var common;
         return -1;
     }
     function getfielditems(ncid) {
-        console.log('Looking for: ' + ncid);
         var index = findItemIndex(ncid);
         if (index == -1) {
             return null;
@@ -206,7 +251,6 @@ var common;
     }
     common.getfielditems = getfielditems;
     function getfieldvaluesbyname(ncid) {
-        console.log('Looking for: ' + ncid);
         var index = findItemIndex(ncid);
         if (index == -1) {
             return null;
@@ -289,17 +333,48 @@ var common;
         scope.$apply();
     }
     common.updateUI = updateUI;
-    function describeComponent(typename) {
-        helpTypeName = typename;
+    function setDataSet() {
+        //NN dataset
     }
-    common.describeComponent = describeComponent;
-    function showHelp(typename) {
-        if (helpTypeName == typename) {
-            return true;
+    common.setDataSet = setDataSet;
+    function getinputdims() {
+        if (net_dataset) {
+            //dataset input dimensions
+            return [1, 2, 3];
         }
-        return false;
+        return [];
     }
-    common.showHelp = showHelp;
+    function nnProtoHeaders() {
+        var d = new Date();
+        var header = "name:" + "NN_" + d.getFullYear() + (d.getMonth() + 1) +
+            d.getDay() + d.getHours() + d.getMinutes() + d.getSeconds() +
+            "_" + net_name + "_" + neuralNet.length + "_layers\n";
+        header += "input: \"data\"\n";
+        for (var _i = 0, _a = getinputdims(); _i < _a.length; _i++) {
+            var dim = _a[_i];
+            header += "input_dim: " + dim + "\n";
+        }
+        return header;
+    }
+    function generateProto() {
+        var comps = [];
+        var prevlayer;
+        var prototxt = nnProtoHeaders();
+        for (var _i = 0, neuralNet_3 = neuralNet; _i < neuralNet_3.length; _i++) {
+            var nn = neuralNet_3[_i];
+            var layer = nn.convertToJSON();
+            if (!prevlayer) {
+                layer.bottom = "data";
+            }
+            else {
+                layer.bottom = prevlayer.name;
+            }
+            prototxt += "layers " + JSON.stringify(layer) + "\n";
+            prevlayer = layer;
+        }
+        return prototxt;
+    }
+    common.generateProto = generateProto;
     function getAvailableComponentTypes() {
         return availableComponentTypes;
     }
@@ -309,7 +384,7 @@ var common;
     }
     common.getAvailableFrameworks = getAvailableFrameworks;
 })(common || (common = {}));
-angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 'ngSanitize'])
+angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 'ngSanitize', 'ngResource'])
     .run(['$rootScope', '$templateCache', function ($rootScope, $templateCache) {
         $templateCache.put('myApp', 'myApp');
         $rootScope['common'] = common;
@@ -363,7 +438,7 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
 })
     .controller('DialogCtrl', ['$scope', '$mdDialog', function ($scope, $mdDialog) {
         $scope.customFullscreen = false;
-        $scope.showAlert = function (ev, typename, typedescription, typeurl) {
+        $scope.showInfo = function (ev, typename, typedescription, typeurl) {
             // Appending dialog to document.body to cover sidenav in docs app
             // Modal dialogs should fully cover application
             // to prevent interaction outside of dialog
@@ -427,4 +502,43 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
                 };
             }
         };
-    }]);
+    }])
+    .directive('generateProto', function () {
+    return {
+        restrict: 'E',
+        template: '<a href="" class="btn btn-primary btn-lg" ng-click="downloadJson()">Download Prototxt</a>',
+        scope: true,
+        link: function (scope, element, attr) {
+            var anchor = element.children()[0];
+            // When the download starts, disable the link
+            scope.$on('download-start', function () {
+                console.log('download-start event');
+                $(anchor).attr('disabled', 'disabled');
+            });
+            // When the download finishes, attach the data to the link. Enable the link and change its appearance.
+            scope.$on('downloaded', function (event, data) {
+                console.log('on downloaded');
+                $(anchor).attr({
+                    href: 'data:application/test;base64,' + data,
+                    download: attr.filename
+                })
+                    .removeAttr('disabled');
+                // .text('Save')
+                // .removeClass('btn-primary')
+                // .addClass('btn-success');
+                //Also overwrite the download pdf function to do nothing.
+                // scope.downloadJson = function() {
+                //
+                // };
+            });
+        },
+        controller: ['$scope', '$attrs', function getDataController($scope, $attrs) {
+                $scope.downloadJson = function () {
+                    $scope.$emit('download-start');
+                    console.log('emitted download start event');
+                    var filedata = btoa(unescape(encodeURIComponent($scope.common.generateProto())));
+                    $scope.$emit('downloaded', filedata);
+                };
+            }]
+    };
+});

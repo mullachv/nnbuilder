@@ -10,7 +10,7 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['jasmine'],
+    frameworks: [ 'jasmine'],
 
 
     // list of files / patterns to load in the browser
@@ -20,9 +20,7 @@ module.exports = function(config) {
       'http://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.12.1/ui-bootstrap-tpls.js',
       'http://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular-mocks.js',
       'ts_output_readonly_do_NOT_change_manually/src/common.js',
-      'ts_output_readonly_do_NOT_change_manually/src/preload.js',
-      'ts_output_readonly_do_NOT_change_manually/src/builder_test.js',
-      'ts_output_readonly_do_NOT_change_manually/src/aiService_test.js'
+      'ts_output_readonly_do_NOT_change_manually/src/builder_test.js'
     ],
 
 
