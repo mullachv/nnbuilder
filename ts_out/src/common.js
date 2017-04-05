@@ -398,11 +398,18 @@ var common;
         }
         return [];
     }
+    function prepadZero(pp) {
+        if (pp < 10) {
+            return '0' + pp;
+        }
+        return '' + pp;
+    }
     function nnProtoHeaders() {
         var d = new Date();
-        var header = "name:" + "NN_" + d.getFullYear() + (d.getMonth() + 1) +
-            d.getDay() + d.getHours() + d.getMinutes() + d.getSeconds() +
-            "_" + net_name + "_" + neuralNet.length + "_layers\n";
+        var header = "name:" + "NN_" + d.getFullYear() + prepadZero(d.getMonth() + 1)
+            + prepadZero(d.getDate()) + "_" + prepadZero(d.getHours())
+            + prepadZero(d.getMinutes()) + prepadZero(d.getSeconds()) + "_" + net_name + "_"
+            + neuralNet.length + "_layers\n";
         header += "input: \"data\"\n";
         for (var _i = 0, _a = getinputdims(); _i < _a.length; _i++) {
             var dim = _a[_i];

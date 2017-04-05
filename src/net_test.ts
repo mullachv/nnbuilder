@@ -104,7 +104,7 @@ describe("Network Tests > ", function() {
       let fvs = net.getfieldvaluesbyname(comp.id);
       //console.log('by name:' + JSON.stringify(fvs));
       let expectedProto:string =
-          'name:NN_20174115515__1_layers\n' +
+          'name:NN_20170402_141755__1_layers\n' +
           'input: "data"\n' +
           'layers {"name":"Pooling_1000","top":"Pooling_1000","type":"POOLING","pooling_param":{"pool":"MAX","kernel_size":3,"stride":1},"bottom":"data"}\n';
 
@@ -114,15 +114,11 @@ describe("Network Tests > ", function() {
       //console.log('encoded:' + encoded);
       let unescaped = unescape(encoded);
       //console.log('unescaped:' + unescaped);
-
       //'name:NN_' must match -- remaining of that line is datetime related
       expect(unescaped.substring(0,8)).toBe(expectedProto.substring(0,8));
 
-      var first = unescaped.substring(19);
-      var second = expectedProto.substring(19);
-      // console.log('first:' + first);
-      // console.log('second:' + second);
-      // console.log(strScanCompare(first, second));
+      var first = unescaped.substring(23);
+      var second = expectedProto.substring(23);
       expect(first).toEqual(second);
 
     });

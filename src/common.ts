@@ -431,11 +431,20 @@ module common {
     return [];
   }
 
+  function prepadZero(pp:number):string {
+    if(pp<10) {
+      return '0'+pp;
+    }
+    return ''+pp;
+  }
+
   function nnProtoHeaders():any {
     let d = new Date();
-    let header = "name:" + "NN_" + d.getFullYear() + (d.getMonth() +1) +
-      d.getDay() + d.getHours() + d.getMinutes() + d.getSeconds() +
-      "_" + net_name + "_" + neuralNet.length + "_layers\n";
+
+    let header = "name:" + "NN_" + d.getFullYear() + prepadZero(d.getMonth()+1)
+      + prepadZero(d.getDate()) + "_" + prepadZero(d.getHours())
+      + prepadZero(d.getMinutes()) + prepadZero(d.getSeconds()) + "_" + net_name + "_"
+      + neuralNet.length + "_layers\n";
 
     header += "input: \"data\"\n";
     for(let dim of getinputdims()) {
