@@ -15,12 +15,23 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'http://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular.js',
-      'http://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular-touch.js',
+      'http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.js',
+      'https://cdn.gitcdn.link/cdn/angular/bower-material/v1.1.3/angular-material.js',
+      'https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-messages.min.js',
+      'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-114/svg-assets-cache.js',
+      'https://code.angularjs.org/1.5.5/angular-sanitize.js',
+      'https://code.angularjs.org/1.5.5/angular-resource.js',
+
+      'http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-touch.js',
       'http://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.12.1/ui-bootstrap-tpls.js',
-      'http://ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular-mocks.js',
-      'ts_output_readonly_do_NOT_change_manually/src/common.js',
-      'ts_output_readonly_do_NOT_change_manually/src/builder_test.js'
+      'http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-mocks.js',
+      'https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js',
+      'https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-route.min.js',
+      'https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-aria.min.js',
+
+      'ts_out/src/common.js',
+      'ts_out/src/builder_test.js',
+      'ts_out/src/net_test.js'
     ],
 
 
@@ -32,6 +43,7 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      'ts_out/**/*.js': ['coverage']
     },
 
 
@@ -59,6 +71,9 @@ module.exports = function(config) {
     // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
     logLevel: config.LOG_INFO,
 
+    // client: {
+    //   captureConsole: true
+    // }
 
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: true,

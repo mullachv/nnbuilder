@@ -59,7 +59,7 @@ var NNComponent = (function () {
             case NNComponentType[NNComponentType.Pooling]:
                 layer.type = "POOLING";
                 layer.pooling_param = {
-                    pool: scvalues['pool'],
+                    pool: scvalues['pool_type'],
                     kernel_size: scvalues['kernel_size'],
                     stride: scvalues['stride']
                 };
@@ -89,6 +89,34 @@ var NNComponent = (function () {
     };
     return NNComponent;
 }());
+function get_user_response_for_type(ctype) {
+    switch (NNComponentType[ctype]) {
+        case NNComponentType[NNComponentType.ConvNet2D]:
+            return {
+                num_output: 0,
+                pad: 0,
+                kernel_size: 0
+            };
+        case NNComponentType[NNComponentType.Pooling]:
+            return {
+                pool: '',
+                kernel_size: 0,
+                stride: 0
+            };
+        case NNComponentType[NNComponentType.FullyConnected]:
+            return {
+                num_output: 0
+            };
+        case NNComponentType[NNComponentType.DropOut]:
+            return {
+                dropout_ratio: 0
+            };
+        case NNComponentType[NNComponentType.ReLU]:
+            return {};
+        case NNComponentType[NNComponentType.Softmax]:
+            return {};
+    }
+}
 function create_ConvNet2D_Settings() {
     var NumOutputField = new FieldSetting();
     NumOutputField.fieldlabel = 'Number of output';
@@ -255,11 +283,17 @@ var common;
         if (index == -1) {
             return null;
         }
-        var fvbyname = [{}];
+        // let fvbyname = [];
+        // for (let it of neuralNet[index].settings) {
+        //   fvbyname[<any>it.fieldname] = it.fieldvalue;
+        // }
+        var fvbyname = {};
         for (var _i = 0, _a = neuralNet[index].settings; _i < _a.length; _i++) {
             var it_1 = _a[_i];
             fvbyname[it_1.fieldname] = it_1.fieldvalue;
         }
+        // console.log(fvbyname);
+        // console.log(JSON.stringify(fvbyname));
         return fvbyname;
     }
     common.getfieldvaluesbyname = getfieldvaluesbyname;
@@ -268,7 +302,7 @@ var common;
     }
     common.getCurrentComponents = getCurrentComponents;
     function addToNN(ct) {
-        console.log('Adding ct: ' + NNComponentType[ct]);
+        //console.log('Adding ct: ' + NNComponentType[ct]);
         //create a new NNComponent
         var nc = new NNComponent();
         nc.type = ct;
@@ -310,13 +344,32 @@ var common;
         }
     }
     common.removeFromNN = removeFromNN;
+    function removeAllComponents() {
+        neuralNet = [];
+    }
+    common.removeAllComponents = removeAllComponents;
+    function reset() {
+        removeAllComponents();
+        nnSeqId = 1000;
+    }
+    common.reset = reset;
+    function getNNComponentAsString(ncid) {
+        var index = findItemIndex(ncid);
+        if (index == -1) {
+            return '';
+        }
+        return JSON.stringify(neuralNet[index]);
+    }
+    common.getNNComponentAsString = getNNComponentAsString;
     function saveNNCProps(ncid, userresponse) {
+        //console.log(userresponse);
         var index = findItemIndex(ncid);
         if (index == -1) {
             return;
         }
         var nc = neuralNet[index];
         for (var key in userresponse) {
+            //console.log('setting k: ' + key + ' v: ' + JSON.stringify(userresponse[key]));
             setfieldvalue(nc, key, userresponse[key]);
         }
     }
@@ -325,6 +378,7 @@ var common;
         for (var i = 0; i < nc.settings.length; i++) {
             if (nc.settings[i].fieldname == fieldname) {
                 nc.settings[i].fieldvalue = fieldvalue;
+                //console.log('Value set: ' + nc.settings[i].fieldname + ' to: ' + nc.settings[i].fieldvalue);
                 return;
             }
         }
@@ -361,8 +415,8 @@ var common;
         var prevlayer;
         var prototxt = nnProtoHeaders();
         for (var _i = 0, neuralNet_3 = neuralNet; _i < neuralNet_3.length; _i++) {
-            var nn = neuralNet_3[_i];
-            var layer = nn.convertToJSON();
+            var comp = neuralNet_3[_i];
+            var layer = comp.convertToJSON();
             if (!prevlayer) {
                 layer.bottom = "data";
             }
@@ -385,10 +439,11 @@ var common;
     common.getAvailableFrameworks = getAvailableFrameworks;
 })(common || (common = {}));
 angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 'ngSanitize', 'ngResource'])
-    .run(['$rootScope', '$templateCache', function ($rootScope, $templateCache) {
+    .run(['$rootScope', '$templateCache', '$log', function ($rootScope, $templateCache, $log) {
         $templateCache.put('myApp', 'myApp');
         $rootScope['common'] = common;
         common.init($rootScope);
+        $log.info("myApp Started");
     }])
     .directive('draggable', function () {
     return function (scope, element, attrs) {
@@ -535,8 +590,13 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
         controller: ['$scope', '$attrs', function getDataController($scope, $attrs) {
                 $scope.downloadJson = function () {
                     $scope.$emit('download-start');
+                    var generated = $scope.common.generateProto();
+                    console.log("generated");
+                    console.log(generated);
+                    var encoded = encodeURIComponent(generated);
+                    var unescaped = unescape(encoded);
                     console.log('emitted download start event');
-                    var filedata = btoa(unescape(encodeURIComponent($scope.common.generateProto())));
+                    var filedata = btoa(unescaped);
                     $scope.$emit('downloaded', filedata);
                 };
             }]

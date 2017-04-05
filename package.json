@@ -3,6 +3,11 @@
   "name": "nnbuilder",
   "main": "index.html",
   "devDependencies": {
+    "@types/angular-mocks": "^1.5.9",
+    "@types/angularjs": "^1.5.14-alpha",
+    "@types/jasmine": "^2.5.47",
+    "@types/jquery": "^2.0.41",
+    "@types/selenium-webdriver": "^3.0.1",
     "autoprefixer": "^6.1.2",
     "bower": "^1.8.0",
     "cssnano": "^3.3.2",
@@ -33,5 +38,9 @@
     "prestart": "npm install",
     "start": "http-server -a localhost -p 4000 -c-1",
     "test": "grunt"
+  },
+  "dependencies": {
+    "angular-mocks": "^1.6.3",
+    "grunt": "^0.4.5"
   }
 }

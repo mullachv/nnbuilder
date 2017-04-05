@@ -80,7 +80,7 @@ class NNComponent implements INNComponent {
       case NNComponentType[NNComponentType.Pooling]:
         layer.type = "POOLING";
         layer.pooling_param = {
-          pool: scvalues['pool'],
+          pool: scvalues['pool_type'],
           kernel_size: scvalues['kernel_size'],
           stride: scvalues['stride']
         };
@@ -107,6 +107,36 @@ class NNComponent implements INNComponent {
     return layer;
     // let str = JSON.stringify(layer);
     // return 'layers  ' + str ;
+  }
+
+}
+
+function get_user_response_for_type(ctype:NNComponentType):any {
+  switch(NNComponentType[ctype]) {
+    case NNComponentType[NNComponentType.ConvNet2D]:
+      return {
+          num_output: 0,
+          pad: 0,
+          kernel_size: 0
+        };
+    case NNComponentType[NNComponentType.Pooling]:
+      return {
+        pool: '',
+        kernel_size: 0,
+        stride: 0
+      };
+    case NNComponentType[NNComponentType.FullyConnected]:
+      return {
+        num_output: 0
+      };
+    case NNComponentType[NNComponentType.DropOut]:
+      return {
+        dropout_ratio: 0
+      };
+    case NNComponentType[NNComponentType.ReLU]:
+      return {};
+    case NNComponentType[NNComponentType.Softmax]:
+      return {};
   }
 
 }
@@ -298,10 +328,16 @@ module common {
     if (index == -1) {
         return null;
     }
-    let fvbyname = [{}];
+    // let fvbyname = [];
+    // for (let it of neuralNet[index].settings) {
+    //   fvbyname[<any>it.fieldname] = it.fieldvalue;
+    // }
+    let fvbyname:any = {};
     for (let it of neuralNet[index].settings) {
       fvbyname[<any>it.fieldname] = it.fieldvalue;
     }
+    // console.log(fvbyname);
+    // console.log(JSON.stringify(fvbyname));
     return fvbyname;
   }
 
@@ -310,7 +346,7 @@ module common {
   }
 
   export function addToNN(ct:NNComponentType) {
-    console.log('Adding ct: ' + NNComponentType[ct]);
+    //console.log('Adding ct: ' + NNComponentType[ct]);
     //create a new NNComponent
     let nc:NNComponent = new NNComponent();
     nc.type = ct;
@@ -339,13 +375,32 @@ module common {
     }
   }
 
+  export function removeAllComponents() {
+    neuralNet = [];
+  }
+
+  export function reset() {
+    removeAllComponents();
+    nnSeqId = 1000;
+  }
+
+  export function getNNComponentAsString(ncid:number) {
+    let index = findItemIndex(ncid);
+    if (index == -1) {
+        return '';
+    }
+    return JSON.stringify(neuralNet[index]);
+  }
+
   export function saveNNCProps(ncid:number, userresponse:any):void {
+    //console.log(userresponse);
     let index = findItemIndex(ncid);
     if (index == -1) {
         return;
     }
     let nc:NNComponent = neuralNet[index];
     for (var key in userresponse) {
+      //console.log('setting k: ' + key + ' v: ' + JSON.stringify(userresponse[key]));
       setfieldvalue(nc, key, userresponse[key]);
     }
   }
@@ -354,6 +409,7 @@ module common {
     for (var i = 0; i < nc.settings.length; i++) {
       if (nc.settings[i].fieldname == fieldname) {
         nc.settings[i].fieldvalue = fieldvalue;
+        //console.log('Value set: ' + nc.settings[i].fieldname + ' to: ' + nc.settings[i].fieldvalue);
         return;
       }
     }
@@ -392,8 +448,8 @@ module common {
     let comps = [];
     let prevlayer;
     let prototxt = nnProtoHeaders();
-    for(let nn of neuralNet) {
-      let layer = nn.convertToJSON();
+    for(let comp of neuralNet) {
+      let layer = comp.convertToJSON();
       if(!prevlayer) {
         layer.bottom = "data";
       } else {
@@ -415,11 +471,15 @@ module common {
 
 }
 
+//eliminates typescript transpile error 'cannot find name unescape'
+declare function unescape(s: string):string;
+
 angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 'ngSanitize', 'ngResource'])
-  .run(['$rootScope', '$templateCache', function($rootScope:angular.IScope, $templateCache:any) {
+  .run(['$rootScope', '$templateCache', '$log', function($rootScope:angular.IScope, $templateCache:any, $log:any) {
     $templateCache.put('myApp', 'myApp');
     $rootScope['common'] = common;
     common.init($rootScope);
+    $log.info("myApp Started");
   }])
   .directive('draggable', function() {
     return function(scope:any, element:any, attrs:any) {
@@ -563,17 +623,17 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
         template: '<a href="" class="btn btn-primary btn-lg" ng-click="downloadJson()">Download Prototxt</a>',
         scope: true,
         link: function(scope, element, attr) {
-            var anchor = element.children()[0];
+            var anchor:any = element.children()[0];
             // When the download starts, disable the link
             scope.$on('download-start', function() {
                 console.log('download-start event');
-                $(anchor).attr('disabled', 'disabled');
+                (<any>$(anchor)).attr('disabled', 'disabled');
             });
 
             // When the download finishes, attach the data to the link. Enable the link and change its appearance.
             scope.$on('downloaded', function(event, data) {
               console.log('on downloaded');
-                $(anchor).attr({
+                (<any>$(anchor)).attr({
                     href: 'data:application/test;base64,' + data,
                     download: attr.filename
                 })
@@ -591,8 +651,13 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
         controller: [ '$scope', '$attrs', function getDataController($scope:any, $attrs:any) {
           $scope.downloadJson = function() {
               $scope.$emit('download-start');
+              let generated = $scope.common.generateProto();
+              console.log("generated");
+              console.log(generated);
+              let encoded = encodeURIComponent(generated);
+              let unescaped = unescape(encoded);
               console.log('emitted download start event');
-              var filedata = btoa(unescape(encodeURIComponent($scope.common.generateProto())));
+              var filedata = btoa(unescaped);
               $scope.$emit('downloaded', filedata);
           };
         }]

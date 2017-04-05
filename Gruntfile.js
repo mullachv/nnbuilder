@@ -2,33 +2,18 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    // shell: {
-    //   auto_resize_images_on_mac: {
-    //     command: auto_resize_images_command
-    //   }
-    // },
     karma: {
       unit: {
         configFile: 'karma.conf.js',
         singleRun: true
       }
     },
-    // copy: {
-    //   imgs: {
-    //     expand: true,
-    //     src: 'imgs/*.*',
-    //     dest: 'dist/'
-    //   }
-    // },
     concat: {
       options: {
         separator: ';',
       },
       js: {
-        src: [
-          'ts_output_readonly_do_NOT_change_manually/src/gameLogic.js',
-          'ts_output_readonly_do_NOT_change_manually/src/game.js',
-          'ts_output_readonly_do_NOT_change_manually/src/aiService.js'],
+        src: ['ts_out/src/common.js'],
         dest: 'dist/js/everything.js',
       },
     },
