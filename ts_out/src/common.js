@@ -13,7 +13,7 @@ var FieldSetting = (function () {
 }());
 var NNComponentType;
 (function (NNComponentType) {
-    NNComponentType[NNComponentType["ConvNet2D"] = 0] = "ConvNet2D";
+    NNComponentType[NNComponentType["Convolution"] = 0] = "Convolution";
     NNComponentType[NNComponentType["Pooling"] = 1] = "Pooling";
     NNComponentType[NNComponentType["FullyConnected"] = 2] = "FullyConnected";
     NNComponentType[NNComponentType["DropOut"] = 3] = "DropOut";
@@ -42,19 +42,33 @@ var NNComponent = (function () {
         }
         return 'glyphicon glyphicon-remove-sign';
     };
+    //create sublayer from super's props
+    NNComponent.prototype.getSubLayer = function (n, y) {
+        var layer = {};
+        layer.name = y + n.substring(n.lastIndexOf("_"));
+        layer.top = n;
+        layer.bottom = n;
+        layer.type = y;
+        //console.log('sublayer:' + JSON.stringify(layer));
+        return layer;
+    };
     NNComponent.prototype.convertToJSON = function () {
+        var layers = [];
         var layer = {};
         layer.name = this.name;
         layer.top = this.name;
         var scvalues = common.getfieldvaluesbyname(this.id);
         switch (NNComponentType[this.type]) {
-            case NNComponentType[NNComponentType.ConvNet2D]:
+            case NNComponentType[NNComponentType.Convolution]:
                 layer.type = "CONVOLUTION";
                 layer.convolution_param = {
                     num_output: scvalues['num_output'],
                     pad: scvalues['pad'],
                     kernel_size: scvalues['kernel_size']
                 };
+                var sublayer = this.getSubLayer(layer.name, scvalues['activation']);
+                layers.push(layer);
+                layers.push(sublayer);
                 break;
             case NNComponentType[NNComponentType.Pooling]:
                 layer.type = "POOLING";
@@ -63,35 +77,38 @@ var NNComponent = (function () {
                     kernel_size: scvalues['kernel_size'],
                     stride: scvalues['stride']
                 };
+                layers.push(layer);
                 break;
             case NNComponentType[NNComponentType.FullyConnected]:
                 layer.type = "INNER_PRODUCT";
                 layer.pooling_param = {
                     num_output: scvalues['num_output']
                 };
+                layers.push(layer);
                 break;
             case NNComponentType[NNComponentType.DropOut]:
                 layer.type = "DROPOUT";
                 layer.dropout_param = {
                     dropout_ratio: scvalues['dropout_ratio']
                 };
+                layers.push(layer);
                 break;
             case NNComponentType[NNComponentType.ReLU]:
                 layer.type = "RELU";
+                layers.push(layer);
                 break;
             case NNComponentType[NNComponentType.Softmax]:
                 layer.type = "SOFTMAX";
+                layers.push(layer);
                 break;
         }
-        return layer;
-        // let str = JSON.stringify(layer);
-        // return 'layers  ' + str ;
+        return layers;
     };
     return NNComponent;
 }());
 function get_user_response_for_type(ctype) {
     switch (NNComponentType[ctype]) {
-        case NNComponentType[NNComponentType.ConvNet2D]:
+        case NNComponentType[NNComponentType.Convolution]:
             return {
                 num_output: 0,
                 pad: 0,
@@ -117,7 +134,14 @@ function get_user_response_for_type(ctype) {
             return {};
     }
 }
-function create_ConvNet2D_Settings() {
+var ActivationType;
+(function (ActivationType) {
+    ActivationType[ActivationType["RELU"] = 0] = "RELU";
+    ActivationType[ActivationType["SIGMOID"] = 1] = "SIGMOID";
+    ActivationType[ActivationType["TANH"] = 2] = "TANH";
+    ActivationType[ActivationType["LEAKYRELU"] = 3] = "LEAKYRELU";
+})(ActivationType || (ActivationType = {}));
+function create_Convolution_Settings() {
     var NumOutputField = new FieldSetting();
     NumOutputField.fieldlabel = 'Number of output';
     NumOutputField.fieldname = 'num_output';
@@ -133,11 +157,22 @@ function create_ConvNet2D_Settings() {
     KernelSizeField.fieldname = 'kernel_size';
     KernelSizeField.fieldtype = FieldType.INT;
     KernelSizeField.fieldrequired = true;
-    var ConvNet2D_Settings = [];
-    ConvNet2D_Settings.push(NumOutputField);
-    ConvNet2D_Settings.push(PadField);
-    ConvNet2D_Settings.push(KernelSizeField);
-    return ConvNet2D_Settings;
+    var ActivationField = new FieldSetting();
+    ActivationField.fieldlabel = 'Activation Type';
+    ActivationField.fieldname = 'activation';
+    ActivationField.fieldtype = FieldType.ENUMERATION;
+    ActivationField.fieldvaluechoices = [];
+    ActivationField.fieldvaluechoices.push(ActivationType[ActivationType.RELU]);
+    ActivationField.fieldvaluechoices.push(ActivationType[ActivationType.SIGMOID]);
+    ActivationField.fieldvaluechoices.push(ActivationType[ActivationType.TANH]);
+    ActivationField.fieldvaluechoices.push(ActivationType[ActivationType.LEAKYRELU]);
+    ActivationField.fieldrequired = true;
+    var Convolution_Settings = [];
+    Convolution_Settings.push(NumOutputField);
+    Convolution_Settings.push(PadField);
+    Convolution_Settings.push(KernelSizeField);
+    Convolution_Settings.push(ActivationField);
+    return Convolution_Settings;
 }
 function create_FullyConnected_Settings() {
     var NumOutputField = new FieldSetting();
@@ -214,7 +249,7 @@ var common;
         //use $http service
         availableComponentTypes = [
             {
-                typename: NNComponentType[NNComponentType.ConvNet2D],
+                typename: NNComponentType[NNComponentType.Convolution],
                 btnclass: 'btn btn-warning btn-large',
                 spanclass: 'glyphicon glyphicon-question-sign',
                 typedescription: 'A convolution operation applies a matrix dot product to the input matrix using a kernel matrix. \r\nThe kernel matrix is then shifted horizontal along the input matrix by stride pixels to compute the next overlapping matrix dot product.',
@@ -309,8 +344,8 @@ var common;
         nc.id = nnSeqId;
         nc.name = NNComponentType[ct] + "_" + nc.id;
         switch (NNComponentType[ct]) {
-            case NNComponentType[NNComponentType.ConvNet2D]:
-                nc.settings = create_ConvNet2D_Settings();
+            case NNComponentType[NNComponentType.Convolution]:
+                nc.settings = create_Convolution_Settings();
                 break;
             case NNComponentType[NNComponentType.Pooling]:
                 nc.settings = create_Pooling_Settings();
@@ -423,15 +458,18 @@ var common;
         var prototxt = nnProtoHeaders();
         for (var _i = 0, neuralNet_3 = neuralNet; _i < neuralNet_3.length; _i++) {
             var comp = neuralNet_3[_i];
-            var layer = comp.convertToJSON();
+            var layers = comp.convertToJSON();
             if (!prevlayer) {
-                layer.bottom = "data";
+                layers[0].bottom = "data";
             }
             else {
-                layer.bottom = prevlayer.name;
+                layers[0].bottom = prevlayer.name;
             }
-            prototxt += "layers " + JSON.stringify(layer) + "\n";
-            prevlayer = layer;
+            prototxt += "layers " + JSON.stringify(layers[0]) + "\n";
+            if (layers[1]) {
+                prototxt += "layers " + JSON.stringify(layers[1]) + "\n";
+            }
+            prevlayer = layers[0];
         }
         return prototxt;
     }
@@ -528,7 +566,12 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
                     '    <md-list>' +
                     '      <md-list-item ng-repeat="item in items">' +
                     '          <label>{{item.fieldlabel}}</label>' +
-                    '            <input ng-model="CValues[item.fieldname]" size="10" placeholder="test..">' +
+                    '            <div ng-if="!isEnumType(item.fieldtype)">  ' +
+                    '              <input ng-model="CValues[item.fieldname]" size="10" placeholder="test..">' +
+                    '            </div>' +
+                    '            <div ng-if="isEnumType(item.fieldtype)">  ' +
+                    '              <select ng-model="CValues[item.fieldname]" ng-options="choice for choice in item.fieldvaluechoices"></select>' +
+                    '            </div>' +
                     '      </md-list-item>' +
                     '    </md-list>' +
                     '  </md-dialog-content>' +
@@ -559,8 +602,12 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
                     $mdDialog.hide();
                 };
                 $scope.saveDialog = function () {
-                    // console.log($scope.CValues);
                     $mdDialog.hide($scope.CValues);
+                };
+                $scope.isEnumType = function (fieldtype) {
+                    if (fieldtype == FieldType.ENUMERATION)
+                        return true;
+                    return false;
                 };
             }
         };
@@ -598,11 +645,9 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
                 $scope.downloadJson = function () {
                     $scope.$emit('download-start');
                     var generated = $scope.common.generateProto();
-                    console.log("generated");
                     console.log(generated);
                     var encoded = encodeURIComponent(generated);
                     var unescaped = unescape(encoded);
-                    console.log('emitted download start event');
                     var filedata = btoa(unescaped);
                     $scope.$emit('downloaded', filedata);
                 };

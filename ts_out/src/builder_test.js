@@ -2,7 +2,7 @@ describe("Neural Net Builder Tests", function () {
     function create_sample_user_response(nt) {
         var user_response = get_user_response_for_type(nt);
         switch (NNComponentType[nt]) {
-            case NNComponentType[NNComponentType.ConvNet2D]:
+            case NNComponentType[NNComponentType.Convolution]:
                 user_response['num_output'] = 256;
                 user_response['pad'] = 0;
                 user_response['kernel_size'] = 3;
@@ -44,12 +44,12 @@ describe("Neural Net Builder Tests", function () {
             expect(net.getAvailableComponentTypes().length).toBe(6);
         });
         it('add 1 component', function () {
-            net.addToNN(NNComponentType.ConvNet2D);
+            net.addToNN(NNComponentType.Convolution);
             expect(net.getCurrentComponents().length).toBe(1);
         });
         it('add 2 components', function () {
-            net.addToNN(NNComponentType.ConvNet2D);
-            net.addToNN(NNComponentType.ConvNet2D);
+            net.addToNN(NNComponentType.Convolution);
+            net.addToNN(NNComponentType.Convolution);
             expect(net.getCurrentComponents().length).toBe(3);
         });
         it('remove 2 components', function () {
@@ -58,9 +58,9 @@ describe("Neural Net Builder Tests", function () {
             expect(net.getCurrentComponents().length).toBe(1);
         });
         it('should add a convolutional component and checkout', function () {
-            net.addToNN(NNComponentType.ConvNet2D);
+            net.addToNN(NNComponentType.Convolution);
             var comp = net.getCurrentComponents()[0];
-            var usr_response = create_sample_user_response(NNComponentType.ConvNet2D);
+            var usr_response = create_sample_user_response(NNComponentType.Convolution);
             net.saveNNCProps(comp.id, usr_response);
             //console.log('comp: ' + net.getNNComponentAsString(comp.id));
             var fvs = net.getfielditems(comp.id);
@@ -83,9 +83,9 @@ describe("Neural Net Builder Tests", function () {
             expect(net.getCurrentComponents().length).toBe(0);
         });
         it('should add a convolutional component and checkout by fieldvalues', function () {
-            net.addToNN(NNComponentType.ConvNet2D);
+            net.addToNN(NNComponentType.Convolution);
             var comp = net.getCurrentComponents()[0];
-            var usr_response = create_sample_user_response(NNComponentType.ConvNet2D);
+            var usr_response = create_sample_user_response(NNComponentType.Convolution);
             net.saveNNCProps(comp.id, usr_response);
             //console.log('comp: ' + net.getNNComponentAsString(comp.id));
             var fvs = net.getfieldvaluesbyname(comp.id);
