@@ -1,4 +1,4 @@
-describe("Neural Net Builder Tests", function () {
+describe("Neural Net Builder Tests > ", function () {
     function create_sample_user_response(nt) {
         var user_response = get_user_response_for_type(nt);
         switch (NNComponentType[nt]) {
@@ -15,17 +15,17 @@ describe("Neural Net Builder Tests", function () {
             case NNComponentType[NNComponentType.FullyConnected]:
                 user_response['num_output'] = 256;
                 break;
-            case NNComponentType[NNComponentType.DropOut]:
-                user_response['dropout_ratio'] = 0.5;
-                break;
-            case NNComponentType[NNComponentType.ReLU]:
-                break;
+            // case NNComponentType[NNComponentType.DropOut]:
+            //   user_response['dropout_ratio'] = 0.5;
+            //   break;
+            // case NNComponentType[NNComponentType.ReLU]:
+            //   break;
             case NNComponentType[NNComponentType.Softmax]:
                 break;
         }
         return user_response;
     }
-    describe("Initialization and tests", function () {
+    describe("Initialization and tests > ", function () {
         var root;
         var net;
         beforeEach(angular.mock.module("myApp"));
@@ -40,8 +40,8 @@ describe("Neural Net Builder Tests", function () {
         it('should contain empty neural net', inject(function ($rootScope, $templateCache, $log) {
             expect(net.getCurrentComponents().length).toBe(0);
         }));
-        it('available components to be 6', function () {
-            expect(net.getAvailableComponentTypes().length).toBe(6);
+        it('available components to be 4', function () {
+            expect(net.getAvailableComponentTypes().length).toBe(4);
         });
         it('add 1 component', function () {
             net.addToNN(NNComponentType.Convolution);
@@ -62,7 +62,6 @@ describe("Neural Net Builder Tests", function () {
             var comp = net.getCurrentComponents()[0];
             var usr_response = create_sample_user_response(NNComponentType.Convolution);
             net.saveNNCProps(comp.id, usr_response);
-            //console.log('comp: ' + net.getNNComponentAsString(comp.id));
             var fvs = net.getfielditems(comp.id);
             //console.log('items:' + JSON.stringify(fvs));
             for (var _i = 0, fvs_1 = fvs; _i < fvs_1.length; _i++) {
@@ -87,7 +86,6 @@ describe("Neural Net Builder Tests", function () {
             var comp = net.getCurrentComponents()[0];
             var usr_response = create_sample_user_response(NNComponentType.Convolution);
             net.saveNNCProps(comp.id, usr_response);
-            //console.log('comp: ' + net.getNNComponentAsString(comp.id));
             var fvs = net.getfieldvaluesbyname(comp.id);
             //console.log('by name:' + JSON.stringify(fvs));
             expect(fvs['num_output']).toBe(256);

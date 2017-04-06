@@ -16,11 +16,11 @@ describe("Network Tests > ", function () {
             case NNComponentType[NNComponentType.FullyConnected]:
                 user_response['num_output'] = 1024;
                 return user_response;
-            case NNComponentType[NNComponentType.DropOut]:
-                user_response['dropout_ratio'] = 0.5;
-                return user_response;
-            case NNComponentType[NNComponentType.ReLU]:
-                return user_response;
+            // case NNComponentType[NNComponentType.DropOut]:
+            //   user_response['dropout_ratio'] = 0.5;
+            //   return user_response;
+            // case NNComponentType[NNComponentType.ReLU]:
+            //   return user_response;
             case NNComponentType[NNComponentType.Softmax]:
                 return user_response;
         }
@@ -108,12 +108,9 @@ describe("Network Tests > ", function () {
         it('prototxt for convolution should be ok', function () {
             net.addToNN(NNComponentType.Convolution);
             var comp = net.getCurrentComponents()[0];
-            //console.log('c:' + JSON.stringify(comp));
             var usr_response = sample_response(NNComponentType.Convolution);
-            //console.log('u:' + JSON.stringify(usr_response));
             net.saveNNCProps(comp.id, usr_response);
             var fvs = net.getfieldvaluesbyname(comp.id);
-            //console.log('by name:' + JSON.stringify(fvs));
             var expectedProto = 'name:NN_20170402_141755__1_layers\n' +
                 'input: "data"\n' +
                 'layers {"name":"Convolution_1000","top":"Convolution_1000","type":"CONVOLUTION","convolution_param":{"num_output":256,"pad":0,"kernel_size":3},"bottom":"data"}\n' +
@@ -121,10 +118,25 @@ describe("Network Tests > ", function () {
             var generated = net.generateProto();
             // console.log('gen:' + generated);
             var encoded = encodeURIComponent(generated);
-            //console.log('encoded:' + encoded);
             var unescaped = unescape(encoded);
-            //console.log('unescaped:' + unescaped);
-            //'name:NN_' must match -- remaining of that line is datetime related
+            expect(unescaped.substring(0, 8)).toBe(expectedProto.substring(0, 8));
+            var first = unescaped.substring(23);
+            var second = expectedProto.substring(23);
+            expect(first).toEqual(second);
+        });
+        it('prototxt for FullyConnected should be ok', function () {
+            net.addToNN(NNComponentType.FullyConnected);
+            var comp = net.getCurrentComponents()[0];
+            var usr_response = sample_response(NNComponentType.FullyConnected);
+            net.saveNNCProps(comp.id, usr_response);
+            var fvs = net.getfieldvaluesbyname(comp.id);
+            var expectedProto = 'name:NN_20170402_141755__1_layers\n' +
+                'input: "data"\n' +
+                'layers {"name":"FullyConnected_1000","top":"FullyConnected_1000","type":"INNER_PRODUCT","inner_product_param":{"num_output":1024},"bottom":"data"}\n';
+            var generated = net.generateProto();
+            // console.log('gen:' + generated);
+            var encoded = encodeURIComponent(generated);
+            var unescaped = unescape(encoded);
             expect(unescaped.substring(0, 8)).toBe(expectedProto.substring(0, 8));
             var first = unescaped.substring(23);
             var second = expectedProto.substring(23);

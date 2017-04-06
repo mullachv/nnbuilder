@@ -1,4 +1,4 @@
-describe("Neural Net Builder Tests", function() {
+describe("Neural Net Builder Tests > ", function() {
 
   function create_sample_user_response(nt:NNComponentType) {
     let user_response = get_user_response_for_type(nt);
@@ -16,18 +16,18 @@ describe("Neural Net Builder Tests", function() {
       case NNComponentType[NNComponentType.FullyConnected]:
         user_response['num_output'] = 256;
         break;
-      case NNComponentType[NNComponentType.DropOut]:
-        user_response['dropout_ratio'] = 0.5;
-        break;
-      case NNComponentType[NNComponentType.ReLU]:
-        break;
+      // case NNComponentType[NNComponentType.DropOut]:
+      //   user_response['dropout_ratio'] = 0.5;
+      //   break;
+      // case NNComponentType[NNComponentType.ReLU]:
+      //   break;
       case NNComponentType[NNComponentType.Softmax]:
         break;
     }
     return user_response;
   }
 
-  describe("Initialization and tests", function() {
+  describe("Initialization and tests > ", function() {
     var root:any;
     var net:any;
 
@@ -47,8 +47,8 @@ describe("Neural Net Builder Tests", function() {
       expect(net.getCurrentComponents().length).toBe(0);
     }));
 
-    it('available components to be 6', function() {
-      expect(net.getAvailableComponentTypes().length).toBe(6);
+    it('available components to be 4', function() {
+      expect(net.getAvailableComponentTypes().length).toBe(4);
     });
 
     it('add 1 component', function() {
@@ -73,7 +73,6 @@ describe("Neural Net Builder Tests", function() {
       let comp = net.getCurrentComponents()[0];
       let usr_response = create_sample_user_response(NNComponentType.Convolution);
       net.saveNNCProps(comp.id, usr_response);
-      //console.log('comp: ' + net.getNNComponentAsString(comp.id));
       let fvs = net.getfielditems(comp.id);
       //console.log('items:' + JSON.stringify(fvs));
       for (let it of fvs) {
@@ -99,7 +98,6 @@ describe("Neural Net Builder Tests", function() {
       let comp = net.getCurrentComponents()[0];
       let usr_response = create_sample_user_response(NNComponentType.Convolution);
       net.saveNNCProps(comp.id, usr_response);
-      //console.log('comp: ' + net.getNNComponentAsString(comp.id));
       let fvs = net.getfieldvaluesbyname(comp.id);
       //console.log('by name:' + JSON.stringify(fvs));
       expect(fvs['num_output']).toBe(256);

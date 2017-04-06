@@ -20,8 +20,8 @@ enum NNComponentType {
   Convolution,
   Pooling,
   FullyConnected,
-  DropOut,
-  ReLU,
+  // DropOut,
+  // ReLU,
   Softmax
 }
 
@@ -104,22 +104,22 @@ class NNComponent implements INNComponent {
         break;
       case NNComponentType[NNComponentType.FullyConnected]:
         layer.type = "INNER_PRODUCT";
-        layer.pooling_param = {
+        layer.inner_product_param = {
           num_output: scvalues['num_output']
         };
         layers.push(layer);
         break;
-      case NNComponentType[NNComponentType.DropOut]:
-        layer.type = "DROPOUT";
-        layer.dropout_param = {
-          dropout_ratio: scvalues['dropout_ratio']
-        };
-        layers.push(layer);
-        break;
-      case NNComponentType[NNComponentType.ReLU]:
-        layer.type = "RELU";
-        layers.push(layer);
-        break;
+      // case NNComponentType[NNComponentType.DropOut]:
+      //   layer.type = "DROPOUT";
+      //   layer.dropout_param = {
+      //     dropout_ratio: scvalues['dropout_ratio']
+      //   };
+      //   layers.push(layer);
+      //   break;
+      // case NNComponentType[NNComponentType.ReLU]:
+      //   layer.type = "RELU";
+      //   layers.push(layer);
+      //   break;
       case NNComponentType[NNComponentType.Softmax]:
         layer.type = "SOFTMAX";
         layers.push(layer);
@@ -148,12 +148,12 @@ function get_user_response_for_type(ctype:NNComponentType):any {
       return {
         num_output: 0
       };
-    case NNComponentType[NNComponentType.DropOut]:
-      return {
-        dropout_ratio: 0
-      };
-    case NNComponentType[NNComponentType.ReLU]:
-      return {};
+    // case NNComponentType[NNComponentType.DropOut]:
+    //   return {
+    //     dropout_ratio: 0
+    //   };
+    // case NNComponentType[NNComponentType.ReLU]:
+    //   return {};
     case NNComponentType[NNComponentType.Softmax]:
       return {};
   }
@@ -219,23 +219,23 @@ function create_FullyConnected_Settings() {
   return FullyConnected_Settings;
 }
 
-function create_Dropout_Settings() {
-  let DropoutField:FieldSetting = new FieldSetting();
-  DropoutField.fieldlabel = 'Dropout Fraction';
-  DropoutField.fieldname = 'dropout_ratio';
-  DropoutField.fieldtype = FieldType.FLOAT;
-  DropoutField.fieldrequired = true;
+// function create_Dropout_Settings() {
+//   let DropoutField:FieldSetting = new FieldSetting();
+//   DropoutField.fieldlabel = 'Dropout Fraction';
+//   DropoutField.fieldname = 'dropout_ratio';
+//   DropoutField.fieldtype = FieldType.FLOAT;
+//   DropoutField.fieldrequired = true;
+//
+//   let Dropout_Settings:FieldSetting[] = [];
+//   Dropout_Settings.push(DropoutField);
+//
+//   return Dropout_Settings;
+// }
 
-  let Dropout_Settings:FieldSetting[] = [];
-  Dropout_Settings.push(DropoutField);
-
-  return Dropout_Settings;
-}
-
-function create_ReLU_Settings() {
-  let ReLU_Settings:FieldSetting[] = [];
-  return ReLU_Settings;
-}
+// function create_ReLU_Settings() {
+//   let ReLU_Settings:FieldSetting[] = [];
+//   return ReLU_Settings;
+// }
 
 function create_Softmax_Settings() {
   let Softmax_Settings:FieldSetting[]= [];
@@ -305,7 +305,7 @@ module common {
       },
       {
         typename: NNComponentType[NNComponentType.Pooling],
-        btnclass: 'btn btn-success btn-large',
+        btnclass: 'btn btn-primary btn-large',
         spanclass: 'glyphicon glyphicon-question-sign',
         typedescription: 'Pooling simply returns a scalar value within typically a square area of a particular size \r\n from the input. This causes the size of the output to be scaled down by a factor. For instance, a maxpool over a \r\n size of 4x4 reduces the output by a factor of 4, with respect to the input.',
         typeurl: 'http://cs231n.github.io/convolutional-networks/#pool'
@@ -317,20 +317,20 @@ module common {
         typedescription: 'Fully Connected layer connects all the input units from one layer to each of the units of the next layer.\r\nThis can be used to scale from certain number of units say 1024 at one layer to 256 units at the next layer.',
         typeurl: 'http://cs231n.github.io/convolutional-networks/#fc'
       },
-      {
-        typename: NNComponentType[NNComponentType.DropOut],
-        btnclass: 'btn btn-success btn-large',
-        spanclass: 'glyphicon glyphicon-question-sign',
-        typedescription: 'Drop out layer affords the appearance of training on an ensemble of networks, by simply choosing to omit \r\n a certain fraction of outputs. Usually specified as a fraction, which is akin to eliminating that \r\n  unit from the network as many times, during forward and backward propagation.',
-        typeurl: 'https://en.wikipedia.org/wiki/Convolutional_neural_network#Dropout'
-      },
-      {
-        typename: NNComponentType[NNComponentType.ReLU],
-        btnclass: 'btn btn-primary btn-large',
-        spanclass: 'glyphicon glyphicon-question-sign',
-        typedescription: 'ReLU is a rectified linear unit and it works on a real scalar by returning zero when negative, \r\n otherwise the scalar\'s value.',
-        typeurl: 'http://cs231n.github.io/convolutional-networks/#conv'
-      },
+      // {
+      //   typename: NNComponentType[NNComponentType.DropOut],
+      //   btnclass: 'btn btn-success btn-large',
+      //   spanclass: 'glyphicon glyphicon-question-sign',
+      //   typedescription: 'Drop out layer affords the appearance of training on an ensemble of networks, by simply choosing to omit \r\n a certain fraction of outputs. Usually specified as a fraction, which is akin to eliminating that \r\n  unit from the network as many times, during forward and backward propagation.',
+      //   typeurl: 'https://en.wikipedia.org/wiki/Convolutional_neural_network#Dropout'
+      // },
+      // {
+      //   typename: NNComponentType[NNComponentType.ReLU],
+      //   btnclass: 'btn btn-primary btn-large',
+      //   spanclass: 'glyphicon glyphicon-question-sign',
+      //   typedescription: 'ReLU is a rectified linear unit and it works on a real scalar by returning zero when negative, \r\n otherwise the scalar\'s value.',
+      //   typeurl: 'http://cs231n.github.io/convolutional-networks/#conv'
+      // },
       {
         typename: NNComponentType[NNComponentType.Softmax],
         btnclass: 'btn btn-success btn-large',
@@ -394,8 +394,8 @@ module common {
       case NNComponentType[NNComponentType.Convolution]: nc.settings = create_Convolution_Settings(); break;
       case NNComponentType[NNComponentType.Pooling]: nc.settings = create_Pooling_Settings(); break;
       case NNComponentType[NNComponentType.FullyConnected]: nc.settings = create_FullyConnected_Settings(); break;
-      case NNComponentType[NNComponentType.DropOut]: nc.settings = create_Dropout_Settings(); break;
-      case NNComponentType[NNComponentType.ReLU]: nc.settings = create_ReLU_Settings(); break;
+      // case NNComponentType[NNComponentType.DropOut]: nc.settings = create_Dropout_Settings(); break;
+      // case NNComponentType[NNComponentType.ReLU]: nc.settings = create_ReLU_Settings(); break;
       case NNComponentType[NNComponentType.Softmax]: nc.settings = create_Softmax_Settings(); break;
     }
     neuralNet.push(nc);
@@ -422,13 +422,13 @@ module common {
     nnSeqId = 1000;
   }
 
-  export function getNNComponentAsString(ncid:number) {
-    let index = findItemIndex(ncid);
-    if (index == -1) {
-        return '';
-    }
-    return JSON.stringify(neuralNet[index]);
-  }
+  // export function getNNComponentAsString(ncid:number) {
+  //   let index = findItemIndex(ncid);
+  //   if (index == -1) {
+  //       return '';
+  //   }
+  //   return JSON.stringify(neuralNet[index]);
+  // }
 
   export function saveNNCProps(ncid:number, userresponse:any):void {
     //console.log(userresponse);
