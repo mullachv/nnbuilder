@@ -128,6 +128,63 @@ class NNComponent implements INNComponent {
     return layers;
   }
 
+  defaultNum(item:any) {
+    if (item) {
+      if (isNumeric(item))
+        return item;
+    }
+    return 0;
+  }
+
+  defaultAlpha(item:any) {
+    if (item) {
+      return "'"+item+"'";
+    }
+    return "''";
+  }
+
+  //["convv", 32, 5, False, ""], ["maxpool", 0, 2, True, "lrelu"], ["convv", 64, 3, True, "lrelu"], ["convv", 64, 3, False, ""],
+  //         ["maxpool", 0, 2, True, "lrelu"], ["convv", 128, 3, True, "lrelu"]]
+  convertToListItem() {
+    let arritems = [];
+    let scvalues:any = common.getfieldvaluesbyname(this.id);
+
+    switch(NNComponentType[this.type]) {
+      case NNComponentType[NNComponentType.Convolution]:
+        arritems.push("'convv'");
+        arritems.push(this.defaultNum(scvalues['num_output']));
+        arritems.push(this.defaultNum(scvalues['kernel_size']));
+        arritems.push('False');
+        arritems.push(this.defaultAlpha(scvalues['activation']));
+        break;
+      case NNComponentType[NNComponentType.Pooling]:
+        arritems.push("'maxpool'");
+        arritems.push(this.defaultNum(scvalues['num_output']));
+        arritems.push(this.defaultNum(scvalues['kernel_size']));
+        arritems.push('False');
+        arritems.push(this.defaultAlpha(scvalues['activation']));
+        break;
+      case NNComponentType[NNComponentType.FullyConnected]:
+        arritems.push("'fc'");
+        arritems.push(this.defaultNum(scvalues['num_output']));
+        arritems.push(0);
+        arritems.push('False');
+        arritems.push("''");
+        break;
+      }
+      return arritems;
+  }
+
+  // self.fc1 = nn.Linear(self.flat_count, 100)
+  // self.fc1bn = nn.BatchNorm1d(100, eps=1e-05, momentum=0.1, affine=True)
+  // self.fc2 = nn.Linear(100, 10)
+  // self.fc2bn = nn.BatchNorm1d(10, eps=1e-05, momentum=0.1, affine=True)
+
+}
+
+//http://stackoverflow.com/questions/9716468/is-there-any-function-like-isnumeric-in-javascript-to-validate-numbers
+function isNumeric(item:any) {
+  return !isNaN(parseFloat(item)) && isFinite(item);
 }
 
 function get_user_response_for_type(ctype:NNComponentType):any {
@@ -285,6 +342,7 @@ function create_Pooling_Settings() {
 module common {
   let availableComponentTypes:any = [];
   let availableFrameworks:any = [];
+  let selectedFramework:any = '';
   let neuralNet:NNComponent[] = [];
   let nnSeqId = 1000;
   let scope:angular.IScope;
@@ -340,6 +398,7 @@ module common {
       }
     ];
     availableFrameworks = ['PyTorch', 'Torch', 'Tensorflow'];
+    selectedFramework = availableFrameworks[0];
   }
 
   function findItemIndex(ncid: number):number {
@@ -517,6 +576,24 @@ module common {
 
   export function getAvailableFrameworks() {
     return availableFrameworks;
+  }
+
+  export function getSelectedFramework() {
+    return selectedFramework;
+  }
+
+  export function isfocused(current:string) {
+    if(current == selectedFramework) {
+      return 'focus';
+    }
+  }
+
+  export function generateLayersList() {
+    let llist = [];
+    for(let comp of neuralNet) {
+      llist.push("[" + comp.convertToListItem().toString() + "]");
+    }
+    return "[" + llist + "]";
   }
 
 }
@@ -719,6 +796,80 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
           };
         }]
       };
-
 })
+.directive('generateCode', function() {
+
+  let dataController = [ '$scope', '$attrs', 'codeTemplateService',
+    function getDataController($scope:any, $attrs:any, codeTemplateService:any) {
+      let codegenerator = function() {
+        $scope.$emit('start-codegeneration');
+        codeTemplateService.getTemplate('PyTorch').then(function(data:any) {
+          let generated = data;
+          let layersArr = common.generateLayersList();
+          //console.log('layers' + layersArr.toString());
+          generated = generated.replace("###LAYERS###", layersArr.toString());
+
+          let encoded = encodeURIComponent(generated);
+          let unescaped = unescape(encoded);
+          var filedata = btoa(unescaped);
+          $scope.$emit('end-codegeneration', filedata);
+        });
+      };
+      $scope.downloadCode = codegenerator;
+
+      $scope.$on('reset-generatecode-button', function(event:any, anchor:any) {
+          (<any>$(anchor))
+          .text('Generate Code')
+          .removeClass('btn-success')
+          .addClass('btn-primary');
+          $scope.downloadCode = codegenerator;
+      });
+
+  }];
+
+  return {
+    restrict: 'E',
+    template: '<a href="" class="btn btn-primary btn-lg" ng-click="downloadCode()">Generate Code</a>',
+    scope: true,
+    link: function(scope, element, attr) {
+        var anchor:any = element.children()[0];
+        // When the download starts, disable the link
+        scope.$on('start-codegeneration', function() {
+            (<any>$(anchor)).attr('disabled', 'disabled');
+        });
+
+        // When the download finishes, attach the data to the link. Enable the link and change its appearance.
+        scope.$on('end-codegeneration', function(event, data) {
+            (<any>$(anchor)).attr({
+                href: 'data:application/test;base64,' + data,
+                download: attr.filename
+            })
+            .removeAttr('disabled')
+            .text('Save Code')
+            .removeClass('btn-primary')
+            .addClass('btn-success');
+            //Also overwrite the download code function to do nothing.
+            scope.downloadCode = function() {
+              scope.$emit('reset-generatecode-button', anchor);
+            };
+        });
+    },
+    controller: dataController
+  };
+})
+.factory('codeTemplateService', ['$http', function($http:any) {
+  return {
+      getTemplate: function(framework:string) {
+        var promise = $http.get('/templates/' + framework + '.templ.py')
+          .then(function(response:any) {
+            return response.data;
+          }, function(reason:any) {
+            console.log('Error#' + reason + ' fetching ' + framework + ' template');
+          });
+        return promise;
+      }
+  };
+}]
+);
+
 ;

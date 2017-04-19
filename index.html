@@ -70,11 +70,12 @@
 
         <!-- framework -->
         <div class="btn-group" role="group" style="position:absolute; top:0%; left:0%; width:40%; height:5%; z-index:1">
-          <button ng-repeat="fwk in common.getAvailableFrameworks()" type="button" class="btn btn-default btn-s">{{fwk}}</button>
+          <button ng-repeat="fwk in common.getAvailableFrameworks()" type="button" class="btn btn-default btn-s" ng-class="common.isfocused(fwk)">{{fwk}}</button>
         </div>
 
         <div class="btn-group" role="group" style="position:absolute; top:0%; left:30%; width:20%; height:10%; z-index:1">
-          <button type="button" class="btn btn-primary btn-lg" ng-click="generateCode()">Generate Code</button>
+          <!-- button type="button" class="btn btn-primary btn-lg" ng-click="generateCode()">Generate Code</button -->
+          <generate-code filename="main.py"></generate-code>
         </div>
 
         <div class="btn-group" role="group" style="position:absolute; top:0%; left:50%; width:20%; height:10%; z-index:1">

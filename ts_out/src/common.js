@@ -104,8 +104,55 @@ var NNComponent = (function () {
         }
         return layers;
     };
+    NNComponent.prototype.defaultNum = function (item) {
+        if (item) {
+            if (isNumeric(item))
+                return item;
+        }
+        return 0;
+    };
+    NNComponent.prototype.defaultAlpha = function (item) {
+        if (item) {
+            return "'" + item + "'";
+        }
+        return "''";
+    };
+    //["convv", 32, 5, False, ""], ["maxpool", 0, 2, True, "lrelu"], ["convv", 64, 3, True, "lrelu"], ["convv", 64, 3, False, ""],
+    //         ["maxpool", 0, 2, True, "lrelu"], ["convv", 128, 3, True, "lrelu"]]
+    NNComponent.prototype.convertToListItem = function () {
+        var arritems = [];
+        var scvalues = common.getfieldvaluesbyname(this.id);
+        switch (NNComponentType[this.type]) {
+            case NNComponentType[NNComponentType.Convolution]:
+                arritems.push("'convv'");
+                arritems.push(this.defaultNum(scvalues['num_output']));
+                arritems.push(this.defaultNum(scvalues['kernel_size']));
+                arritems.push('False');
+                arritems.push(this.defaultAlpha(scvalues['activation']));
+                break;
+            case NNComponentType[NNComponentType.Pooling]:
+                arritems.push("'maxpool'");
+                arritems.push(this.defaultNum(scvalues['num_output']));
+                arritems.push(this.defaultNum(scvalues['kernel_size']));
+                arritems.push('False');
+                arritems.push(this.defaultAlpha(scvalues['activation']));
+                break;
+            case NNComponentType[NNComponentType.FullyConnected]:
+                arritems.push("'fc'");
+                arritems.push(this.defaultNum(scvalues['num_output']));
+                arritems.push(0);
+                arritems.push('False');
+                arritems.push("''");
+                break;
+        }
+        return arritems;
+    };
     return NNComponent;
 }());
+//http://stackoverflow.com/questions/9716468/is-there-any-function-like-isnumeric-in-javascript-to-validate-numbers
+function isNumeric(item) {
+    return !isNaN(parseFloat(item)) && isFinite(item);
+}
 function get_user_response_for_type(ctype) {
     switch (NNComponentType[ctype]) {
         case NNComponentType[NNComponentType.Convolution]:
@@ -240,6 +287,7 @@ var common;
 (function (common) {
     var availableComponentTypes = [];
     var availableFrameworks = [];
+    var selectedFramework = '';
     var neuralNet = [];
     var nnSeqId = 1000;
     var scope;
@@ -294,6 +342,7 @@ var common;
             }
         ];
         availableFrameworks = ['PyTorch', 'Torch', 'Tensorflow'];
+        selectedFramework = availableFrameworks[0];
     }
     common.init = init;
     function findItemIndex(ncid) {
@@ -479,6 +528,25 @@ var common;
         return availableFrameworks;
     }
     common.getAvailableFrameworks = getAvailableFrameworks;
+    function getSelectedFramework() {
+        return selectedFramework;
+    }
+    common.getSelectedFramework = getSelectedFramework;
+    function isfocused(current) {
+        if (current == selectedFramework) {
+            return 'focus';
+        }
+    }
+    common.isfocused = isfocused;
+    function generateLayersList() {
+        var llist = [];
+        for (var _i = 0, neuralNet_4 = neuralNet; _i < neuralNet_4.length; _i++) {
+            var comp = neuralNet_4[_i];
+            llist.push("[" + comp.convertToListItem().toString() + "]");
+        }
+        return "[" + llist + "]";
+    }
+    common.generateLayersList = generateLayersList;
 })(common || (common = {}));
 angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 'ngSanitize', 'ngResource'])
     .run(['$rootScope', '$templateCache', '$log', function ($rootScope, $templateCache, $log) {
@@ -650,4 +718,72 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
                 };
             }]
     };
-});
+})
+    .directive('generateCode', function () {
+    var dataController = ['$scope', '$attrs', 'codeTemplateService',
+        function getDataController($scope, $attrs, codeTemplateService) {
+            var codegenerator = function () {
+                $scope.$emit('start-codegeneration');
+                codeTemplateService.getTemplate('PyTorch').then(function (data) {
+                    var generated = data;
+                    var layersArr = common.generateLayersList();
+                    //console.log('layers' + layersArr.toString());
+                    generated = generated.replace("###LAYERS###", layersArr.toString());
+                    var encoded = encodeURIComponent(generated);
+                    var unescaped = unescape(encoded);
+                    var filedata = btoa(unescaped);
+                    $scope.$emit('end-codegeneration', filedata);
+                });
+            };
+            $scope.downloadCode = codegenerator;
+            $scope.$on('reset-generatecode-button', function (event, anchor) {
+                $(anchor)
+                    .text('Generate Code')
+                    .removeClass('btn-success')
+                    .addClass('btn-primary');
+                $scope.downloadCode = codegenerator;
+            });
+        }];
+    return {
+        restrict: 'E',
+        template: '<a href="" class="btn btn-primary btn-lg" ng-click="downloadCode()">Generate Code</a>',
+        scope: true,
+        link: function (scope, element, attr) {
+            var anchor = element.children()[0];
+            // When the download starts, disable the link
+            scope.$on('start-codegeneration', function () {
+                $(anchor).attr('disabled', 'disabled');
+            });
+            // When the download finishes, attach the data to the link. Enable the link and change its appearance.
+            scope.$on('end-codegeneration', function (event, data) {
+                $(anchor).attr({
+                    href: 'data:application/test;base64,' + data,
+                    download: attr.filename
+                })
+                    .removeAttr('disabled')
+                    .text('Save Code')
+                    .removeClass('btn-primary')
+                    .addClass('btn-success');
+                //Also overwrite the download code function to do nothing.
+                scope.downloadCode = function () {
+                    scope.$emit('reset-generatecode-button', anchor);
+                };
+            });
+        },
+        controller: dataController
+    };
+})
+    .factory('codeTemplateService', ['$http', function ($http) {
+        return {
+            getTemplate: function (framework) {
+                var promise = $http.get('/templates/' + framework + '.templ.py')
+                    .then(function (response) {
+                    return response.data;
+                }, function (reason) {
+                    console.log('Error#' + reason + ' fetching ' + framework + ' template');
+                });
+                return promise;
+            }
+        };
+    }]);
+;

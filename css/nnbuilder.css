@@ -103,3 +103,7 @@ div.cp-help {
 a.nnhidden {
   visibility: hidden;
 }
+
+button:focus {
+    background:olive;
+}
