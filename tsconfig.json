@@ -34,8 +34,9 @@
     "files": [
         "./src/builder_test.ts",
         "./src/common.ts",
+        "./src/mdtest.ts",
         "./src/net_test.ts",
-        "./src/end_to_end_tests.ts"
+        "./src/end_to_end_tests.ts",
         "./typings/angular-protractor/angular-protractor.d.ts",
         "./typings/angularjs/angular.d.ts",
         "./typings/jasmine/jasmine.d.ts",

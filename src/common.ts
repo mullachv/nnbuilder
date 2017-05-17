@@ -338,7 +338,6 @@ function create_Pooling_Settings() {
 
 }
 
-
 module common {
   let availableComponentTypes:any = [];
   let availableFrameworks:any = [];
@@ -349,6 +348,8 @@ module common {
   let helpTypeName = '';
   let net_name = "";
   let net_dataset:any;
+  let net_solver:any;
+  let net_scheduler:any;
 
   export function init(rootScope:angular.IScope) {
     scope = rootScope;
@@ -481,14 +482,6 @@ module common {
     nnSeqId = 1000;
   }
 
-  // export function getNNComponentAsString(ncid:number) {
-  //   let index = findItemIndex(ncid);
-  //   if (index == -1) {
-  //       return '';
-  //   }
-  //   return JSON.stringify(neuralNet[index]);
-  // }
-
   export function saveNNCProps(ncid:number, userresponse:any):void {
     //console.log(userresponse);
     let index = findItemIndex(ncid);
@@ -523,7 +516,7 @@ module common {
   function getinputdims() {
     if (net_dataset) {
       //dataset input dimensions
-      return [1,2,3];
+      return net_dataset.dsdimensions.trim().split('x');
     }
     return [];
   }
@@ -596,6 +589,51 @@ module common {
     return "[" + llist + "]";
   }
 
+  export function getPopularDatasetNames() {
+    return ["MNIST", "CIFAR-10", "SVHN", "LSUN"].map(function(ds){
+      return {name : ds};
+    });
+  }
+
+  export function saveDatasetChoice(choice:any) {
+    console.log('dataset: ' + JSON.stringify(choice));
+    net_dataset = choice;
+
+    // let savedObj = {
+    //   dstype: $scope.dstype,
+    //   dsname: $scope.dstype == 'popular' ? $scope.pdset : $scope.cdsname,
+    //   dsdimensions: $scope.dstype == 'popular' ? '' : $scope.cdsdimensions
+    // };
+  }
+
+  export function getSolvers() {
+    return ["SGD", "Adam", "Adagrad", "RMSProp"].map(function(ss){
+      return {name : ss};
+    });
+  }
+
+  export function saveSolverSettings(solver:any) {
+    console.log('solver: ' + JSON.stringify(solver));
+    net_solver = solver;
+  }
+
+  export function populate_ds_solver(instr:string) {
+    let layersArr = generateLayersList();
+    //console.log('layers' + layersArr.toString());
+    let generated = instr.replace(/###LAYERS###/g, layersArr.toString());
+    generated = generated.replace(/###DIMENSION###/g, net_dataset.dsdimensions.trim().split('x')[0]);
+
+    generated = generated.replace(/###EPOCHS###/g, net_solver.epochs);
+    generated = generated.replace(/###LR###/g, net_solver.lr);
+    generated = generated.replace(/###WEIGHT_DECAY###/g, net_solver.weight_decay);
+    return generated;
+  }
+
+  export function saveScheduler(stt:any) {
+    net_scheduler = stt;
+    //call the backend REST service
+
+  }
 }
 
 //eliminates typescript transpile error 'cannot find name unescape'
@@ -714,15 +752,15 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
            '  </md-dialog-content>' +
            '  <md-dialog-actions>' +
            '    <md-button ng-click="saveDialog()" class="md-primary">' +
-           '      Save Dialog' +
+           '      Save' +
            '    </md-button>' +
            '    <md-button ng-click="closeDialog()" class="md-primary">' +
-           '      Close Dialog' +
+           '      Cancel' +
            '    </md-button>' +
            '  </md-dialog-actions>' +
            '</md-dialog>',
          locals: {
-           items: $scope.common.getfielditems(ncid),
+           fielditems: $scope.common.getfielditems(ncid),
            fieldvalues : $scope.common.getfieldvaluesbyname(ncid)
          },
          controller: dlgController
@@ -734,8 +772,8 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
           //otherwise -- close dialog
       });
 
-      function dlgController($scope:any, $mdDialog:any, items:any, fieldvalues:any) {
-        $scope.items = items;
+      function dlgController($scope:any, $mdDialog:any, fielditems:any, fieldvalues:any) {
+        $scope.items = fielditems;
         $scope.CValues = fieldvalues;
 
         $scope.closeDialog = function() {
@@ -788,7 +826,7 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
           $scope.downloadJson = function() {
               $scope.$emit('download-start');
               let generated = $scope.common.generateProto();
-              console.log(generated);
+              //console.log(generated);
               let encoded = encodeURIComponent(generated);
               let unescaped = unescape(encoded);
               var filedata = btoa(unescaped);
@@ -801,17 +839,16 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
 
   let dataController = [ '$scope', '$attrs', 'codeTemplateService',
     function getDataController($scope:any, $attrs:any, codeTemplateService:any) {
+
       let codegenerator = function() {
         $scope.$emit('start-codegeneration');
         codeTemplateService.getTemplate('PyTorch').then(function(data:any) {
-          let generated = data;
-          let layersArr = common.generateLayersList();
-          //console.log('layers' + layersArr.toString());
-          generated = generated.replace("###LAYERS###", layersArr.toString());
+          let generated = common.populate_ds_solver(data);
+          let filedata = btoa(unescape(encodeURIComponent(generated)));
+          let precode = <HTMLElement> document.querySelector('.src-code-inner>pre>code');
+          precode.innerHTML = generated.replace(/ /g, '&nbsp;').replace(/\t/g, '&nbsp;');
 
-          let encoded = encodeURIComponent(generated);
-          let unescaped = unescape(encoded);
-          var filedata = btoa(unescaped);
+          //console.log('pre: ' + precode.context.innerText + '');
           $scope.$emit('end-codegeneration', filedata);
         });
       };
@@ -870,6 +907,231 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
       }
   };
 }]
-);
+)
+.controller('DatasetCtrl', ['$scope', '$mdDialog', function($scope:any, $mdDialog:any) {
+  $scope.specifyDataset = function ($event:any) {
+    var pEl = angular.element(document.body);
+     $mdDialog.show({
+       parent: pEl,
+       targetEvent: $event,
+       template:
+         '<md-dialog aria-label="List dialog">' +
+         '  <md-dialog-content>'+
+         '  <ul style="list-style:none">'+
+         '  <li>'+
+         '    &nbsp;' +
+         '  </li>'+
+         '  <li>'+
+         '    <input type=radio name=dstype value=popular ng-model=dstype ><label>&nbsp;Popular Datasets:</label> '+
+         '    <select ng-model="sel_ds.dsname" ng-options="choice.name as choice.name for choice in dsnames"></select>' +
+         '  </li>'+
+         '  <li>'+
+         '    <input type=radio name=dstype value=custom ng-model=dstype /><label>&nbsp;Custom Dataset</label>'+
+         '    <ul style="list-style:none; margin:3px" ng-show="dstype==\'custom\'">'+
+         '      <li>'+
+         '        <label>Name:</label><input type=text size=15 placeholder="mydataset" ng-model=sel_ds.dsname /> '+
+         '      </li>'+
+         '      <li>'+
+         '        <label>Input Shape</label><input type=text size=7 placeholder="28x28" ng-model=sel_ds.dsdimensions /> '+
+         '      </li>'+
+         '      <li>'+
+         '        <label>URL</label><input type=text size=25 placeholder="http://yann.lecun.com/exdb/mnist/" ng-model=sel_ds.dsurl /> '+
+         '      </li>'+
+         '    </ul>'+
+         '  </li>'+
+         '  </ul>'+
+         '  </md-dialog-content>' +
+         '  <md-dialog-actions>' +
+         '    <md-button ng-click="saveDialog()" class="md-primary">' +
+         '      Save' +
+         '    </md-button>' +
+         '    <md-button ng-click="closeDialog()" class="md-primary">' +
+         '      Cancel' +
+         '    </md-button>' +
+         '  </md-dialog-actions>' +
+         '</md-dialog>',
+       locals: {
+         items: $scope.common.getPopularDatasetNames()
+       },
+       controller: dsController
+    }).then(
+      function(resp:any) {
+          // console.log(resp);
+          $scope.common.saveDatasetChoice(resp);
+      }, function() {
+        //otherwise -- close dialog
+    });
 
+    function dsController($scope:any, $mdDialog:any, items:any) {
+      $scope.dsnames = items;
+
+      //default
+      $scope.sel_ds = {
+        dstype: 'popular',
+        dsname: 'MNIST',
+        dsdimensions: '28x28',
+        dsurl: 'http://yann.lecun.com/exdb/mnist/'
+      };
+
+      $scope.dstype = 'popular'; //default checkbox
+
+      // $scope.cdsname = 'mydataset';
+      // $scope.cdsdimensions = '28x28';
+      // $scope.cdsurl = 'http://yann.lecun.com/exdb/mnist/';
+
+      $scope.closeDialog = function() {
+        $mdDialog.hide();
+      }
+      $scope.saveDialog = function() {
+        $scope.sel_ds.dstype = $scope.dstype;
+        $mdDialog.hide($scope.sel_ds);
+      }
+    }
+
+  }
+
+}])
+.controller('SolverCtrl', ['$scope', '$mdDialog', function($scope:any, $mdDialog:any) {
+  $scope.specifySolver = function ($event:any) {
+    var pEl = angular.element(document.body);
+     $mdDialog.show({
+       parent: pEl,
+       targetEvent: $event,
+       template:
+         '<md-dialog aria-label="List dialog">' +
+         '  <md-dialog-content>'+
+         '    <ul style="list-style:none">'+
+         '      <li>'+
+         '        &nbsp;' +
+         '      </li>'+
+         '      <li>'+
+         '        <label>&nbsp;Solver:</label> '+
+         '        <select ng-model="selsolver.name" ng-options="solver.name as solver.name for solver in solverList"></select>' +
+         '      </li>'+
+         '      <li>'+
+         '        <label>Learning Rate:</label><input type=text size=5 ng-model=selsolver.lr /> '+
+         '      </li>'+
+         '      <li>'+
+         '        <label>Weight Decay:</label><input type=text size=7 ng-model=selsolver.weight_decay /> '+
+         '      </li>'+
+         '      <li>'+
+         '        <label>Momentum:</label><input type=text size=7 ng-model=selsolver.momentum /> '+
+         '      </li>'+
+         '      <li>'+
+         '        <label>Training Epochs:</label><input type=text size=7 ng-model=selsolver.epochs /> '+
+         '      </li>'+
+         '    </ul>'+
+         '  </md-dialog-content>' +
+         '  <md-dialog-actions>' +
+         '    <md-button ng-click="saveDialog()" class="md-primary">' +
+         '      Save' +
+         '    </md-button>' +
+         '    <md-button ng-click="closeDialog()" class="md-primary">' +
+         '      Cancel' +
+         '    </md-button>' +
+         '  </md-dialog-actions>' +
+         '</md-dialog>',
+       locals: {
+         items: $scope.common.getSolvers()
+       },
+       controller: srController
+    }).then(
+      function(resp:any) {
+          // console.log(resp);
+          $scope.common.saveSolverSettings(resp);
+      }, function() {
+        //otherwise -- close dialog
+    });
+
+    function srController($scope:any, $mdDialog:any, items:any) {
+      $scope.solverList = items;
+      //defaults
+      $scope.selsolver = {
+          name : 'Adam',
+          lr: 0.007,
+          weight_decay: 0.001,
+          momentum: 0.5,
+          epochs: 7
+      };
+
+      $scope.closeDialog = function() {
+        $mdDialog.hide();
+      }
+      $scope.saveDialog = function() {
+        $mdDialog.hide($scope.selsolver);
+      }
+    }
+
+  }
+
+}])
+.controller('TrainTestCtrl', ['$scope', '$mdDialog', function($scope:any, $mdDialog:any) {
+  $scope.specifyTTSchedule = function ($event:any) {
+    var pEl = angular.element(document.body);
+     $mdDialog.show({
+       parent: pEl,
+       targetEvent: $event,
+       template:
+         '<md-dialog aria-label="List dialog">' +
+         '  <md-dialog-content>'+
+         '    <ul style="list-style:none">'+
+         '      <li>'+
+         '        &nbsp;' +
+         '      </li>'+
+        //  '      <li>'+
+        //  '        <label>Job Start Date/Time:</label> '+
+        //  '        <input type=text size=5 ng-model=ttctrl.starttime />'+
+        //  '      </li>'+
+         '      <li>'+
+         '        <label>Max Run Time (Hours):</label><input type=text size=5 ng-model=ttctrl.maxruntime /> '+
+         '      </li>'+
+         '      <li>'+
+         '        <label>Number of CPUs:</label><input type=number min=1 max=8 ng-model=ttctrl.ncpus /> '+
+         '      </li>'+
+         '      <li>'+
+         '        <label>Use GPUs, if available:</label><input type=checkbox ng-model=ttctrl.usegpu /> '+
+         '      </li>'+
+         '    </ul>'+
+         '  </md-dialog-content>' +
+         '  <md-dialog-actions>' +
+         '    <md-button ng-click="saveDialog()" class="md-primary">' +
+         '      Start Training' +
+         '    </md-button>' +
+         '    <md-button ng-click="closeDialog()" class="md-primary">' +
+         '      Cancel' +
+         '    </md-button>' +
+         '  </md-dialog-actions>' +
+         '</md-dialog>',
+       locals: {
+         // items: $scope.common.getSolvers()
+       },
+       controller: ttController
+    }).then(
+      function(resp:any) {//click on save
+          $scope.common.saveScheduler(resp);
+      }, function() {//click on cancel
+
+    });
+
+    function ttController($scope:any, $mdDialog:any) {
+      //defaults
+      $scope.ttctrl = {
+          starttime : Math.floor(new Date().getTime()/1000), //seconds
+          maxruntime: 12,
+          ncpus: 1,
+          usegpu: false
+      };
+
+      $scope.closeDialog = function() {
+        $mdDialog.hide();
+      }
+      $scope.saveDialog = function() {
+        console.log(JSON.stringify($scope.ttctrl));
+        $mdDialog.hide($scope.ttctrl);
+      }
+    }
+
+  }
+
+}])
 ;

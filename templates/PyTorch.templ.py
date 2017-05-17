@@ -68,7 +68,7 @@ class ConvNet(nn.Module):
         layer_modules = {}
         act_modules = {}
         bn_modules = {}
-        input_dim = [28]
+        input_dim = [###DIMENSION###]
         filter_count = []
 
         flattened_size = 1
@@ -126,12 +126,12 @@ class ConvNet(nn.Module):
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 parser.add_argument('--batch-size', type=int, default=50, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--epochs', type=int, default=2, metavar='N',
-                    help='number of epochs to train (default: 10)')
-parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
-                    help='learning rate (default: 0.01)')
-parser.add_argument('--weight_decay', type=float, default=0.0001, metavar='WD',
-                    help='weight decay (default: 0.0001)')
+parser.add_argument('--epochs', type=int, default=###EPOCHS###, metavar='N',
+                    help='number of epochs to train (default: ###EPOCHS###)')
+parser.add_argument('--lr', type=float, default=###LR###, metavar='LR',
+                    help='learning rate (default: ###LR###)')
+parser.add_argument('--weight_decay', type=float, default=###WEIGHT_DECAY###, metavar='WD',
+                    help='weight decay (default: ###WEIGHT_DECAY###)')
 parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
                     help='SGD momentum (default: 0.5)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
