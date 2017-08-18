@@ -35,17 +35,38 @@
     <!-- h1>Welcome to neural net builder</h1 -->
     <div class="container" style="position:absolute; top:5%; left:5%; width:90%; height:90%;">
 
-      <!-- components on the left -->
-      <div ng-controller='DialogCtrl' class="ui-widget ui-state-default toolspanel" style="position:absolute; top:0%; left:0%; width:20%; height:60%;">
+      <div class="ui-widget ui-state-default" style="position:absolute; top:0%; left:0%; width:20%; height:60%;">
 
-        <ul id="componentpanel" class="componentpanel ui-helper-reset ui-helper-clearfix">
-          <li ng-repeat="ctype in common.getAvailableComponentTypes()" >
-            <button ng-class="ctype.btnclass" data-nnctype='{{ctype.typename}}' draggable>
-              {{ctype.typename}}
-              <span ng-class="ctype.spanclass" ng-click="showInfo($event, ctype.typename, ctype.typedescription, ctype.typeurl)"></span>
+        <!-- components on the left -->
+        <div ng-controller='DialogCtrl' class="ui-widget ui-state-default toolspanel" style="position:absolute; top:0%; left:0%; width:100%; height:70%;">
+
+          <ul id="componentpanel" class="componentpanel ui-helper-reset ui-helper-clearfix">
+            <li ng-repeat="ctype in common.getAvailableComponentTypes()" >
+              <button ng-class="ctype.btnclass" data-nnctype='{{ctype.typename}}' draggable>
+                {{ctype.typename}}
+                <span ng-class="ctype.spanclass" ng-click="showInfo($event, ctype.typename, ctype.typedescription, ctype.typeurl)"></span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Advanced controls -->
+        <div class="ui-widget ui-state-default advpanel" style="position:absolute; top:70%; left:0%; width:100%; height:30%;">
+          <div ng-controller='ModelZooTemplateCtrl' class="btn-group" role="group" style="position:absolute; top:10%; left:2%; width:60%; height:5%;">
+            <button type="button" class="btn btn-default btn-info" >
+              Templates
+              <span class='glyphicon glyphicon-wrench' ng-click='specifyTemplate($event)'></span>
             </button>
-          </li>
-        </ul>
+          </div>
+
+          <div  class="btn-group" role="group" style="position:absolute; top:50%; left:2%; width:60%; height:5%;">
+            <button type="button" class="btn btn-default btn-info" >
+              Neuron Sketcher
+              <span class='glyphicon glyphicon-wrench' ></span>
+            </button>
+          </div>
+
+        </div>
 
       </div>
 
