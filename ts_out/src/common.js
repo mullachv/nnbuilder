@@ -343,7 +343,7 @@ var common;
                 typeurl: 'https://en.wikipedia.org/wiki/Softmax_function'
             }
         ];
-        availableFrameworks = ['PyTorch', 'Torch', 'Tensorflow'];
+        availableFrameworks = ['PyTorch', 'Tensorflow'];
         selectedFramework = availableFrameworks[0];
     }
     common.init = init;
@@ -564,6 +564,12 @@ var common;
         });
     }
     common.getSolvers = getSolvers;
+    function getLossFunctions() {
+        return ["MSELoss", "Neg Log Likelihood", "Cross-Entropy", "Hinge", "Logistic"].map(function (ls) {
+            return { name: ls };
+        });
+    }
+    common.getLossFunctions = getLossFunctions;
     function saveSolverSettings(solver) {
         console.log('solver: ' + JSON.stringify(solver));
         net_solver = solver;
@@ -585,6 +591,10 @@ var common;
         //call the backend REST service
     }
     common.saveScheduler = saveScheduler;
+    function getModelZooTemplates() {
+        return ["VGG_CNN_S", "Yearbook", "GoogLeNet_Cars"];
+    }
+    common.getModelZooTemplates = getModelZooTemplates;
 })(common || (common = {}));
 angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 'ngSanitize', 'ngResource'])
     .run(['$rootScope', '$templateCache', '$log', function ($rootScope, $templateCache, $log) {
@@ -909,6 +919,10 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
                     '        &nbsp;' +
                     '      </li>' +
                     '      <li>' +
+                    '        <label>&nbsp;Loss Function:</label> ' +
+                    '        <select ng-model="selsolver.lossfunction" ng-options="loss.name as loss.name for loss in lossfunctions"></select>' +
+                    '      </li>' +
+                    '      <li>' +
                     '        <label>&nbsp;Solver:</label> ' +
                     '        <select ng-model="selsolver.name" ng-options="solver.name as solver.name for solver in solverList"></select>' +
                     '      </li>' +
@@ -936,7 +950,8 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
                     '  </md-dialog-actions>' +
                     '</md-dialog>',
                 locals: {
-                    items: $scope.common.getSolvers()
+                    items: $scope.common.getSolvers(),
+                    lf: $scope.common.getLossFunctions()
                 },
                 controller: srController
             }).then(function (resp) {
@@ -945,15 +960,17 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
             }, function () {
                 //otherwise -- close dialog
             });
-            function srController($scope, $mdDialog, items) {
+            function srController($scope, $mdDialog, items, lf) {
                 $scope.solverList = items;
+                $scope.lossfunctions = lf;
                 //defaults
                 $scope.selsolver = {
                     name: 'Adam',
                     lr: 0.007,
                     weight_decay: 0.001,
                     momentum: 0.5,
-                    epochs: 7
+                    epochs: 7,
+                    lossfunction: 'MSELoss'
                 };
                 $scope.closeDialog = function () {
                     $mdDialog.hide();
@@ -1024,5 +1041,68 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
             }
         };
     }])
-    .controller('TaskCategoryCtrl', ['$scope', '$mdDialog', function ($scope, $mdDialog) {
+    .controller('ModelZooTemplateCtrl', ['$scope', '$mdDialog', function ($scope, $mdDialog) {
+        $scope.specifyTemplate = function ($event) {
+            var pEl = angular.element(document.body);
+            $mdDialog.show({
+                parent: pEl,
+                targetEvent: $event,
+                template: '<md-dialog aria-label="List dialog">' +
+                    '  <md-dialog-content>' +
+                    '  <ul style="list-style:none">' +
+                    '  <li>' +
+                    '    &nbsp;' +
+                    '  </li>' +
+                    '  <li>' +
+                    '    <input type=radio name=tetype ng-model=tetype ><label>&nbsp;Model Zoo Item:</label> ' +
+                    '    <select ng-model="modelitem.name" ng-options="choice as choice for choice in modelszoo"></select>' +
+                    '  </li>' +
+                    '  </ul>' +
+                    '  </md-dialog-content>' +
+                    '  <md-dialog-actions>' +
+                    '    <md-button ng-click="saveDialog()" class="md-primary">' +
+                    '      Save' +
+                    '    </md-button>' +
+                    '    <md-button ng-click="closeDialog()" class="md-primary">' +
+                    '      Cancel' +
+                    '    </md-button>' +
+                    '  </md-dialog-actions>' +
+                    '</md-dialog>',
+                locals: {
+                    items: $scope.common.getModelZooTemplates()
+                },
+                controller: mzController
+            }).then(function (resp) {
+                // console.log(resp);
+                $scope.common.saveSolverSettings(resp);
+            }, function () {
+                //otherwise -- close dialog
+            });
+            function mzController($scope, $mdDialog, items) {
+                $scope.modelszoo = items;
+                //defaults
+                $scope.modelitem = {
+                    name: 'VGG_CNN_S'
+                };
+                $scope.closeDialog = function () {
+                    $mdDialog.hide();
+                };
+                $scope.saveDialog = function () {
+                    $mdDialog.hide($scope.selsolver);
+                };
+            }
+        };
+    }])
+    .factory('ModelTemplateService', ['$http', function ($http) {
+        return {
+            getTemplate: function () {
+                var promise = $http.get('/modeltemplates/models')
+                    .then(function (response) {
+                    return response.data;
+                }, function (reason) {
+                    console.log('Error#' + reason + ' fetching template ' + '/modeltemplates/models');
+                });
+                return promise;
+            }
+        };
     }]);
