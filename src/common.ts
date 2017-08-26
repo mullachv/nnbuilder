@@ -907,7 +907,7 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
 .factory('codeTemplateService', ['$http', function($http:any) {
   return {
       getTemplate: function(framework:string) {
-        var promise = $http.get('/templates/' + framework + '.templ.py')
+        var promise = $http.get('templates/' + framework + '.templ.py')
           .then(function(response:any) {
             return response.data;
           }, function(reason:any) {
@@ -1213,11 +1213,11 @@ angular.module('myApp', ['ngMaterial', 'ngMessages', 'material.svgAssetsCache', 
 .factory('ModelTemplateService', ['$http', function($http:any) {
   return {
       getTemplate: function() {
-        var promise = $http.get('/modeltemplates/models')
+        var promise = $http.get('modeltemplates/models')
           .then(function(response:any) {
             return response.data;
           }, function(reason:any) {
-            console.log('Error#' + reason + ' fetching template ' + '/modeltemplates/models');
+            console.log('Error#' + reason + ' fetching template ' + 'modeltemplates/models');
           });
         return promise;
       }
