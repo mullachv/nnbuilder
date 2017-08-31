@@ -33,8 +33,7 @@ class ConvNet(nn.Module):
             elif classname.find('Pool') != -1:
                 x = self.layer_modules[m](x)
             elif classname.find('Linear') != -1:
-                # x = x.view(-1, self.layer_modules[m].in_features)
-                x = x.view(x.size(0), -1)
+                x = x.view(-1, self.layer_modules[m].in_features)
                 x = self.layer_modules[m](x)
 
             # batch normalization
@@ -91,8 +90,7 @@ class ConvNet(nn.Module):
             elif layer_type in ["maxpool"]:
                 mod = nn.MaxPool2d(kernel, stride=None, padding=0, dilation=1, return_indices=False, ceil_mode=False)
                 input_dim.append(input_dim[-1] / kernel)
-                # flattened_size /= (kernel * kernel)
-                flattened_size = filter_count[-1] * input_dim[-1] * input_dim[-1]
+                flattened_size /= (kernel * kernel)
             elif layer_type in ["fc"]:
                 out_sz = filters
                 mod = nn.Linear(flattened_size,out_sz)
